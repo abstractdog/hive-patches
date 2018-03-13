@@ -416,15 +416,15 @@ index 0000000000..b64d45fb81
 +ANALYZE TABLE src1 COMPUTE STATISTICS FOR COLUMNS key,value;
 diff --git data/files/datasets/src_cbo/load.hive.sql data/files/datasets/src_cbo/load.hive.sql
 new file mode 100644
-index 0000000000..eb91a24b41
+index 0000000000..5bd8c983b5
 --- /dev/null
 +++ data/files/datasets/src_cbo/load.hive.sql
 @@ -0,0 +1,8 @@
 +set hive.cbo.enable=true;
 +
-+CREATE TABLE src_sbo (key STRING COMMENT 'default', value STRING COMMENT 'default') STORED AS TEXTFILE;
++CREATE TABLE src_cbo (key STRING COMMENT 'default', value STRING COMMENT 'default') STORED AS TEXTFILE;
 +
-+LOAD DATA LOCAL INPATH "${hiveconf:test.data.dir}/kv1.txt" INTO TABLE src;
++LOAD DATA LOCAL INPATH "${hiveconf:test.data.dir}/kv1.txt" INTO TABLE src_cbo;
 +
 +analyze table src_cbo compute statistics;
 +analyze table src_cbo compute statistics for columns;
@@ -19384,6 +19384,244 @@ index 6a6b9882ae..60b20efa5f 100644
  FROM (
    FROM src select src.key, src.value WHERE src.key < 100
    UNION ALL
+diff --git ql/src/test/results/clientnegative/input2.q.out ql/src/test/results/clientnegative/input2.q.out
+index f7cdf6e8ff..5dba8a3651 100644
+--- ql/src/test/results/clientnegative/input2.q.out
++++ ql/src/test/results/clientnegative/input2.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10004]: Line 1:7 Invalid table alias or column reference 'a': (possible column names are: key, value)
++FAILED: SemanticException [Error 10004]: Line 2:7 Invalid table alias or column reference 'a': (possible column names are: key, value)
+diff --git ql/src/test/results/clientnegative/nonkey_groupby.q.out ql/src/test/results/clientnegative/nonkey_groupby.q.out
+index bbe928c727..eda09dcf45 100644
+--- ql/src/test/results/clientnegative/nonkey_groupby.q.out
++++ ql/src/test/results/clientnegative/nonkey_groupby.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10025]: Line 1:15 Expression not in GROUP BY key 'key'
++FAILED: SemanticException [Error 10025]: Line 2:15 Expression not in GROUP BY key 'key'
+diff --git ql/src/test/results/clientnegative/ptf_negative_AggrFuncsWithNoGBYNoPartDef.q.out ql/src/test/results/clientnegative/ptf_negative_AggrFuncsWithNoGBYNoPartDef.q.out
+index 8aa512b747..a10cee9923 100644
+--- ql/src/test/results/clientnegative/ptf_negative_AggrFuncsWithNoGBYNoPartDef.q.out
++++ ql/src/test/results/clientnegative/ptf_negative_AggrFuncsWithNoGBYNoPartDef.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10025]: Line 2:7 Expression not in GROUP BY key 'p_mfgr'
++FAILED: SemanticException [Error 10025]: Line 3:7 Expression not in GROUP BY key 'p_mfgr'
+diff --git ql/src/test/results/clientnegative/ptf_negative_WhereWithRankCond.q.out ql/src/test/results/clientnegative/ptf_negative_WhereWithRankCond.q.out
+index 42f60e7c75..d7425e5172 100644
+--- ql/src/test/results/clientnegative/ptf_negative_WhereWithRankCond.q.out
++++ ql/src/test/results/clientnegative/ptf_negative_WhereWithRankCond.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10004]: Line 5:6 Invalid table alias or column reference 'r': (possible column names are: p_partkey, p_name, p_mfgr, p_brand, p_type, p_size, p_container, p_retailprice, p_comment)
++FAILED: SemanticException [Error 10004]: Line 6:6 Invalid table alias or column reference 'r': (possible column names are: p_partkey, p_name, p_mfgr, p_brand, p_type, p_size, p_container, p_retailprice, p_comment)
+diff --git ql/src/test/results/clientnegative/semijoin1.q.out ql/src/test/results/clientnegative/semijoin1.q.out
+index b7a3215c4d..8a7e0206ea 100644
+--- ql/src/test/results/clientnegative/semijoin1.q.out
++++ ql/src/test/results/clientnegative/semijoin1.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10004]: Line 2:7 Invalid table alias or column reference 'b': (possible column names are: key, value)
++FAILED: SemanticException [Error 10004]: Line 3:7 Invalid table alias or column reference 'b': (possible column names are: key, value)
+diff --git ql/src/test/results/clientnegative/semijoin3.q.out ql/src/test/results/clientnegative/semijoin3.q.out
+index 0e096f6238..6233cdb7a5 100644
+--- ql/src/test/results/clientnegative/semijoin3.q.out
++++ ql/src/test/results/clientnegative/semijoin3.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10004]: Line 2:67 Invalid table alias or column reference 'b': (possible column names are: key, value)
++FAILED: SemanticException [Error 10004]: Line 3:67 Invalid table alias or column reference 'b': (possible column names are: key, value)
+diff --git ql/src/test/results/clientnegative/subq_insert.q.out ql/src/test/results/clientnegative/subq_insert.q.out
+index 620409b7fe..b69f42be9e 100644
+--- ql/src/test/results/clientnegative/subq_insert.q.out
++++ ql/src/test/results/clientnegative/subq_insert.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10024]: Line 2:38 Cannot insert in a subquery. Inserting to table  'src1'
++FAILED: SemanticException [Error 10024]: Line 3:38 Cannot insert in a subquery. Inserting to table  'src1'
+diff --git ql/src/test/results/clientnegative/subquery_corr_from.q.out ql/src/test/results/clientnegative/subquery_corr_from.q.out
+index 663a8bb0ce..3af1a8a710 100644
+--- ql/src/test/results/clientnegative/subquery_corr_from.q.out
++++ ql/src/test/results/clientnegative/subquery_corr_from.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10004]: Line 3:113 Invalid table alias or column reference 'po': (possible column names are: p_partkey, p_name, p_mfgr, p_brand, p_type, p_size, p_container, p_retailprice, p_comment)
++FAILED: SemanticException [Error 10004]: Line 4:113 Invalid table alias or column reference 'po': (possible column names are: p_partkey, p_name, p_mfgr, p_brand, p_type, p_size, p_container, p_retailprice, p_comment)
+diff --git ql/src/test/results/clientnegative/subquery_corr_select.q.out ql/src/test/results/clientnegative/subquery_corr_select.q.out
+index 1f3dbb71f3..d95b9397cf 100644
+--- ql/src/test/results/clientnegative/subquery_corr_select.q.out
++++ ql/src/test/results/clientnegative/subquery_corr_select.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10004]: Line 2:54 Invalid table alias or column reference 'po': (possible column names are: p_partkey, p_name, p_mfgr, p_brand, p_type, p_size, p_container, p_retailprice, p_comment)
++FAILED: SemanticException [Error 10004]: Line 3:54 Invalid table alias or column reference 'po': (possible column names are: p_partkey, p_name, p_mfgr, p_brand, p_type, p_size, p_container, p_retailprice, p_comment)
+diff --git ql/src/test/results/clientnegative/subquery_exists_implicit_gby.q.out ql/src/test/results/clientnegative/subquery_exists_implicit_gby.q.out
+index b650309c72..0d846bef23 100644
+--- ql/src/test/results/clientnegative/subquery_exists_implicit_gby.q.out
++++ ql/src/test/results/clientnegative/subquery_exists_implicit_gby.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10250]: org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException: Line 7:7 Invalid SubQuery expression ''val_9'': A predicate on EXISTS/NOT EXISTS SubQuery with implicit Aggregation(no Group By clause) cannot be rewritten.
++FAILED: SemanticException [Error 10250]: org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException: Line 8:7 Invalid SubQuery expression ''val_9'': A predicate on EXISTS/NOT EXISTS SubQuery with implicit Aggregation(no Group By clause) cannot be rewritten.
+diff --git ql/src/test/results/clientnegative/subquery_notexists_implicit_gby.q.out ql/src/test/results/clientnegative/subquery_notexists_implicit_gby.q.out
+index b650309c72..0d846bef23 100644
+--- ql/src/test/results/clientnegative/subquery_notexists_implicit_gby.q.out
++++ ql/src/test/results/clientnegative/subquery_notexists_implicit_gby.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10250]: org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException: Line 7:7 Invalid SubQuery expression ''val_9'': A predicate on EXISTS/NOT EXISTS SubQuery with implicit Aggregation(no Group By clause) cannot be rewritten.
++FAILED: SemanticException [Error 10250]: org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException: Line 8:7 Invalid SubQuery expression ''val_9'': A predicate on EXISTS/NOT EXISTS SubQuery with implicit Aggregation(no Group By clause) cannot be rewritten.
+diff --git ql/src/test/results/clientnegative/subquery_windowing_corr.q.out ql/src/test/results/clientnegative/subquery_windowing_corr.q.out
+index daac4bb3c3..f42e064b32 100644
+--- ql/src/test/results/clientnegative/subquery_windowing_corr.q.out
++++ ql/src/test/results/clientnegative/subquery_windowing_corr.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10249]: org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException: Line 6:8 Unsupported SubQuery Expression 'p_brand': Correlated Sub Queries cannot contain Windowing clauses.
++FAILED: SemanticException [Error 10249]: org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException: Line 7:8 Unsupported SubQuery Expression 'p_brand': Correlated Sub Queries cannot contain Windowing clauses.
+diff --git ql/src/test/results/clientnegative/udaf_invalid_place.q.out ql/src/test/results/clientnegative/udaf_invalid_place.q.out
+index 6727889eda..50880e5267 100644
+--- ql/src/test/results/clientnegative/udaf_invalid_place.q.out
++++ ql/src/test/results/clientnegative/udaf_invalid_place.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10128]: Line 1:21 Not yet supported place for UDAF 'sum'
++FAILED: SemanticException [Error 10128]: Line 2:21 Not yet supported place for UDAF 'sum'
+diff --git ql/src/test/results/clientnegative/udf_array_contains_wrong1.q.out ql/src/test/results/clientnegative/udf_array_contains_wrong1.q.out
+index 00cb3ed275..ac37300613 100644
+--- ql/src/test/results/clientnegative/udf_array_contains_wrong1.q.out
++++ ql/src/test/results/clientnegative/udf_array_contains_wrong1.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 2:22 Argument type mismatch '1': "array" expected at function ARRAY_CONTAINS, but "int" is found
++FAILED: SemanticException [Error 10016]: Line 3:22 Argument type mismatch '1': "array" expected at function ARRAY_CONTAINS, but "int" is found
+diff --git ql/src/test/results/clientnegative/udf_concat_ws_wrong2.q.out ql/src/test/results/clientnegative/udf_concat_ws_wrong2.q.out
+index 24edb6a77e..394fca71af 100644
+--- ql/src/test/results/clientnegative/udf_concat_ws_wrong2.q.out
++++ ql/src/test/results/clientnegative/udf_concat_ws_wrong2.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 2:23 Argument type mismatch '50': Argument 2 of function CONCAT_WS must be "string or array<string>", but "array<int>" was found.
++FAILED: SemanticException [Error 10016]: Line 3:23 Argument type mismatch '50': Argument 2 of function CONCAT_WS must be "string or array<string>", but "array<int>" was found.
+diff --git ql/src/test/results/clientnegative/udf_elt_wrong_args_len.q.out ql/src/test/results/clientnegative/udf_elt_wrong_args_len.q.out
+index 53bb57956f..70b5b50218 100644
+--- ql/src/test/results/clientnegative/udf_elt_wrong_args_len.q.out
++++ ql/src/test/results/clientnegative/udf_elt_wrong_args_len.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10015]: Line 1:7 Arguments length mismatch '3': The function ELT(N,str1,str2,str3,...) needs at least two arguments.
++FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch '3': The function ELT(N,str1,str2,str3,...) needs at least two arguments.
+diff --git ql/src/test/results/clientnegative/udf_field_wrong_args_len.q.out ql/src/test/results/clientnegative/udf_field_wrong_args_len.q.out
+index 5276b44552..81eef73d06 100644
+--- ql/src/test/results/clientnegative/udf_field_wrong_args_len.q.out
++++ ql/src/test/results/clientnegative/udf_field_wrong_args_len.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10014]: Line 1:7 Wrong arguments '3': The function FIELD(str, str1, str2, ...) needs at least two arguments.
++FAILED: SemanticException [Error 10014]: Line 2:7 Wrong arguments '3': The function FIELD(str, str1, str2, ...) needs at least two arguments.
+diff --git ql/src/test/results/clientnegative/udf_field_wrong_type.q.out ql/src/test/results/clientnegative/udf_field_wrong_type.q.out
+index fa6533f848..f48574353f 100644
+--- ql/src/test/results/clientnegative/udf_field_wrong_type.q.out
++++ ql/src/test/results/clientnegative/udf_field_wrong_type.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 2:16 Argument type mismatch 'lintstring': The 2nd argument of function FIELD is expected to a primitive type, but list is found
++FAILED: SemanticException [Error 10016]: Line 3:16 Argument type mismatch 'lintstring': The 2nd argument of function FIELD is expected to a primitive type, but list is found
+diff --git ql/src/test/results/clientnegative/udf_format_number_wrong1.q.out ql/src/test/results/clientnegative/udf_format_number_wrong1.q.out
+index 925c3c0916..ff68c7fadf 100644
+--- ql/src/test/results/clientnegative/udf_format_number_wrong1.q.out
++++ ql/src/test/results/clientnegative/udf_format_number_wrong1.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch '12332.123456': The function FORMAT_NUMBER(X, D or F) needs two arguments.
++FAILED: SemanticException [Error 10015]: Line 3:7 Arguments length mismatch '12332.123456': The function FORMAT_NUMBER(X, D or F) needs two arguments.
+diff --git ql/src/test/results/clientnegative/udf_format_number_wrong2.q.out ql/src/test/results/clientnegative/udf_format_number_wrong2.q.out
+index d98854c18e..be49d434b3 100644
+--- ql/src/test/results/clientnegative/udf_format_number_wrong2.q.out
++++ ql/src/test/results/clientnegative/udf_format_number_wrong2.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch '3': The function FORMAT_NUMBER(X, D or F) needs two arguments.
++FAILED: SemanticException [Error 10015]: Line 3:7 Arguments length mismatch '3': The function FORMAT_NUMBER(X, D or F) needs two arguments.
+diff --git ql/src/test/results/clientnegative/udf_format_number_wrong4.q.out ql/src/test/results/clientnegative/udf_format_number_wrong4.q.out
+index 1536041206..182686dbb6 100644
+--- ql/src/test/results/clientnegative/udf_format_number_wrong4.q.out
++++ ql/src/test/results/clientnegative/udf_format_number_wrong4.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 2:35 Argument type mismatch '4.01': Argument 2 of function FORMAT_NUMBER must be "tinyint" or "smallint" or "int" or "bigint" or "string", but "decimal(3,2)" was found.
++FAILED: SemanticException [Error 10016]: Line 3:35 Argument type mismatch '4.01': Argument 2 of function FORMAT_NUMBER must be "tinyint" or "smallint" or "int" or "bigint" or "string", but "decimal(3,2)" was found.
+diff --git ql/src/test/results/clientnegative/udf_format_number_wrong7.q.out ql/src/test/results/clientnegative/udf_format_number_wrong7.q.out
+index 58704ace34..edc06a2e5c 100644
+--- ql/src/test/results/clientnegative/udf_format_number_wrong7.q.out
++++ ql/src/test/results/clientnegative/udf_format_number_wrong7.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 2:21 Argument type mismatch '4': Argument 1 of function FORMAT_NUMBER must be "tinyint" or "smallint" or "int" or "bigint" or "double" or "float" or "decimal", but "string" was found.
++FAILED: SemanticException [Error 10016]: Line 3:21 Argument type mismatch '4': Argument 1 of function FORMAT_NUMBER must be "tinyint" or "smallint" or "int" or "bigint" or "double" or "float" or "decimal", but "string" was found.
+diff --git ql/src/test/results/clientnegative/udf_greatest_error_1.q.out ql/src/test/results/clientnegative/udf_greatest_error_1.q.out
+index 66a4476894..ce0faa87b3 100644
+--- ql/src/test/results/clientnegative/udf_greatest_error_1.q.out
++++ ql/src/test/results/clientnegative/udf_greatest_error_1.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10014]: Line 1:7 Wrong arguments ''2.0'': greatest only takes primitive types, got array<string>
++FAILED: SemanticException [Error 10014]: Line 2:7 Wrong arguments ''2.0'': greatest only takes primitive types, got array<string>
+diff --git ql/src/test/results/clientnegative/udf_instr_wrong_type.q.out ql/src/test/results/clientnegative/udf_instr_wrong_type.q.out
+index 2b2f29fd65..9aa895b4eb 100644
+--- ql/src/test/results/clientnegative/udf_instr_wrong_type.q.out
++++ ql/src/test/results/clientnegative/udf_instr_wrong_type.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 2:21 Argument type mismatch 'lintstring': The 2nd argument of function INSTR is expected to a primitive type, but list is found
++FAILED: SemanticException [Error 10016]: Line 3:21 Argument type mismatch 'lintstring': The 2nd argument of function INSTR is expected to a primitive type, but list is found
+diff --git ql/src/test/results/clientnegative/udf_locate_wrong_args_len.q.out ql/src/test/results/clientnegative/udf_locate_wrong_args_len.q.out
+index b3e353b88c..356138035a 100644
+--- ql/src/test/results/clientnegative/udf_locate_wrong_args_len.q.out
++++ ql/src/test/results/clientnegative/udf_locate_wrong_args_len.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10015]: Line 1:7 Arguments length mismatch '2': The function LOCATE accepts exactly 2 or 3 arguments.
++FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch '2': The function LOCATE accepts exactly 2 or 3 arguments.
+diff --git ql/src/test/results/clientnegative/udf_locate_wrong_type.q.out ql/src/test/results/clientnegative/udf_locate_wrong_type.q.out
+index eb724a576f..db41e2e534 100644
+--- ql/src/test/results/clientnegative/udf_locate_wrong_type.q.out
++++ ql/src/test/results/clientnegative/udf_locate_wrong_type.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 2:22 Argument type mismatch 'lintstring': The 2nd argument of function LOCATE is expected to a primitive type, but list is found
++FAILED: SemanticException [Error 10016]: Line 3:22 Argument type mismatch 'lintstring': The 2nd argument of function LOCATE is expected to a primitive type, but list is found
+diff --git ql/src/test/results/clientnegative/udf_map_values_arg_num.q.out ql/src/test/results/clientnegative/udf_map_values_arg_num.q.out
+index f5deee4d74..6320a2eed0 100644
+--- ql/src/test/results/clientnegative/udf_map_values_arg_num.q.out
++++ ql/src/test/results/clientnegative/udf_map_values_arg_num.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10015]: Line 1:7 Arguments length mismatch '"2"': The function MAP_VALUES only accepts 1 argument.
++FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch '"2"': The function MAP_VALUES only accepts 1 argument.
+diff --git ql/src/test/results/clientnegative/udf_printf_wrong1.q.out ql/src/test/results/clientnegative/udf_printf_wrong1.q.out
+index 41359d03f1..298b8a9e3a 100644
+--- ql/src/test/results/clientnegative/udf_printf_wrong1.q.out
++++ ql/src/test/results/clientnegative/udf_printf_wrong1.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch 'printf': The function PRINTF(String format, Obj... args) needs at least one arguments.
++FAILED: SemanticException [Error 10015]: Line 3:7 Arguments length mismatch 'printf': The function PRINTF(String format, Obj... args) needs at least one arguments.
+diff --git ql/src/test/results/clientnegative/udf_printf_wrong2.q.out ql/src/test/results/clientnegative/udf_printf_wrong2.q.out
+index 6a7c8e6a9b..09e7b84f27 100644
+--- ql/src/test/results/clientnegative/udf_printf_wrong2.q.out
++++ ql/src/test/results/clientnegative/udf_printf_wrong2.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 2:14 Argument type mismatch '100': Argument 1 of function PRINTF must be "string", but "int" was found.
++FAILED: SemanticException [Error 10016]: Line 3:14 Argument type mismatch '100': Argument 1 of function PRINTF must be "string", but "int" was found.
+diff --git ql/src/test/results/clientnegative/udf_printf_wrong3.q.out ql/src/test/results/clientnegative/udf_printf_wrong3.q.out
+index c020fda493..95063b922f 100644
+--- ql/src/test/results/clientnegative/udf_printf_wrong3.q.out
++++ ql/src/test/results/clientnegative/udf_printf_wrong3.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 2:32 Argument type mismatch '"argument"': Argument 2 of function PRINTF must be "PRIMITIVE", but "array<string>" was found.
++FAILED: SemanticException [Error 10016]: Line 3:32 Argument type mismatch '"argument"': Argument 2 of function PRINTF must be "PRIMITIVE", but "array<string>" was found.
+diff --git ql/src/test/results/clientnegative/udf_size_wrong_args_len.q.out ql/src/test/results/clientnegative/udf_size_wrong_args_len.q.out
+index 45b41facab..805776e85e 100644
+--- ql/src/test/results/clientnegative/udf_size_wrong_args_len.q.out
++++ ql/src/test/results/clientnegative/udf_size_wrong_args_len.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch 'lintstring': The function SIZE only accepts 1 argument.
++FAILED: SemanticException [Error 10015]: Line 3:7 Arguments length mismatch 'lintstring': The function SIZE only accepts 1 argument.
+diff --git ql/src/test/results/clientnegative/udf_size_wrong_type.q.out ql/src/test/results/clientnegative/udf_size_wrong_type.q.out
+index 41007013a2..a38ee31a8c 100644
+--- ql/src/test/results/clientnegative/udf_size_wrong_type.q.out
++++ ql/src/test/results/clientnegative/udf_size_wrong_type.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 1:12 Argument type mismatch ''wrong type: string'': "map" or "list" is expected at function SIZE, but "string" is found
++FAILED: SemanticException [Error 10016]: Line 2:12 Argument type mismatch ''wrong type: string'': "map" or "list" is expected at function SIZE, but "string" is found
+diff --git ql/src/test/results/clientnegative/udf_sort_array_by_wrong2.q.out ql/src/test/results/clientnegative/udf_sort_array_by_wrong2.q.out
+index 220ade5735..4ae738ed35 100644
+--- ql/src/test/results/clientnegative/udf_sort_array_by_wrong2.q.out
++++ ql/src/test/results/clientnegative/udf_sort_array_by_wrong2.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch '70000': SORT_ARRAY_BY requires minimum 2 arguments, got 1
++FAILED: SemanticException [Error 10015]: Line 3:7 Arguments length mismatch '70000': SORT_ARRAY_BY requires minimum 2 arguments, got 1
+diff --git ql/src/test/results/clientnegative/udf_when_type_wrong.q.out ql/src/test/results/clientnegative/udf_when_type_wrong.q.out
+index 7c7582d413..bc2851fead 100644
+--- ql/src/test/results/clientnegative/udf_when_type_wrong.q.out
++++ ql/src/test/results/clientnegative/udf_when_type_wrong.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 3:13 Argument type mismatch ''1'': "boolean" is expected after WHEN, but "string" is found
++FAILED: SemanticException [Error 10016]: Line 4:13 Argument type mismatch ''1'': "boolean" is expected after WHEN, but "string" is found
 diff --git ql/src/test/results/clientpositive/add_part_exist.q.out ql/src/test/results/clientpositive/add_part_exist.q.out
 index 78516643f8..e918ae23a9 100644
 --- ql/src/test/results/clientpositive/add_part_exist.q.out
