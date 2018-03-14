@@ -1,3 +1,57 @@
+diff --git accumulo-handler/src/test/queries/positive/accumulo_custom_key.q accumulo-handler/src/test/queries/positive/accumulo_custom_key.q
+index 6684fd32f6..ca7e6c74e3 100644
+--- accumulo-handler/src/test/queries/positive/accumulo_custom_key.q
++++ accumulo-handler/src/test/queries/positive/accumulo_custom_key.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ CREATE TABLE accumulo_ck_1(key struct<col1:string,col2:string,col3:string>, value string)
+ STORED BY 'org.apache.hadoop.hive.accumulo.AccumuloStorageHandler'
+ WITH SERDEPROPERTIES (
+diff --git accumulo-handler/src/test/queries/positive/accumulo_custom_key2.q accumulo-handler/src/test/queries/positive/accumulo_custom_key2.q
+index 038633f0bb..615e5f83ef 100644
+--- accumulo-handler/src/test/queries/positive/accumulo_custom_key2.q
++++ accumulo-handler/src/test/queries/positive/accumulo_custom_key2.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ CREATE TABLE accumulo_ck_3(key struct<col1:string,col2:string,col3:string>, value string)
+ STORED BY 'org.apache.hadoop.hive.accumulo.AccumuloStorageHandler'
+ WITH SERDEPROPERTIES (
+diff --git accumulo-handler/src/test/queries/positive/accumulo_joins.q accumulo-handler/src/test/queries/positive/accumulo_joins.q
+index b72ec6ba2f..a6b09ab5b2 100644
+--- accumulo-handler/src/test/queries/positive/accumulo_joins.q
++++ accumulo-handler/src/test/queries/positive/accumulo_joins.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ DROP TABLE users;
+ DROP TABLE states;
+ DROP TABLE countries;
+diff --git accumulo-handler/src/test/queries/positive/accumulo_predicate_pushdown.q accumulo-handler/src/test/queries/positive/accumulo_predicate_pushdown.q
+index 0f064afd4a..e0725d761c 100644
+--- accumulo-handler/src/test/queries/positive/accumulo_predicate_pushdown.q
++++ accumulo-handler/src/test/queries/positive/accumulo_predicate_pushdown.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ CREATE TABLE accumulo_pushdown(key string, value string) 
+ STORED BY 'org.apache.hadoop.hive.accumulo.AccumuloStorageHandler'
+ WITH SERDEPROPERTIES ("accumulo.columns.mapping" = ":rowid,cf:string");
+diff --git accumulo-handler/src/test/queries/positive/accumulo_queries.q accumulo-handler/src/test/queries/positive/accumulo_queries.q
+index 0aceaa0750..bc93d8ac23 100644
+--- accumulo-handler/src/test/queries/positive/accumulo_queries.q
++++ accumulo-handler/src/test/queries/positive/accumulo_queries.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ -- remove these; after HIVE-18802 is fixed
+ set hive.optimize.index.filter=false;
+ set hive.optimize.ppd=false;
+diff --git accumulo-handler/src/test/queries/positive/accumulo_single_sourced_multi_insert.q accumulo-handler/src/test/queries/positive/accumulo_single_sourced_multi_insert.q
+index f904d3fa3b..c12f9628cc 100644
+--- accumulo-handler/src/test/queries/positive/accumulo_single_sourced_multi_insert.q
++++ accumulo-handler/src/test/queries/positive/accumulo_single_sourced_multi_insert.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ -- HIVE-4375 Single sourced multi insert consists of native and non-native table mixed throws NPE
+ CREATE TABLE src_x1(key string, value string);
+ CREATE TABLE src_x2(key string, value string)
 diff --git contrib/src/test/queries/clientnegative/case_with_row_sequence.q contrib/src/test/queries/clientnegative/case_with_row_sequence.q
 index 910ffdaa40..99220927ff 100644
 --- contrib/src/test/queries/clientnegative/case_with_row_sequence.q
@@ -3048,6 +3102,24 @@ index b47644cca3..021832beee 100644
  drop table tstsrcpart;
  create table tstsrcpart like srcpart;
  
+diff --git ql/src/test/queries/clientnegative/lockneg_query_tbl_in_locked_db.q ql/src/test/queries/clientnegative/lockneg_query_tbl_in_locked_db.q
+index 6ccdae30da..b68e7121e2 100644
+--- ql/src/test/queries/clientnegative/lockneg_query_tbl_in_locked_db.q
++++ ql/src/test/queries/clientnegative/lockneg_query_tbl_in_locked_db.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:srcpart
+ set hive.compute.query.using.stats=false;
+ create database lockneg1;
+ use lockneg1;
+diff --git ql/src/test/queries/clientnegative/lockneg_try_lock_db_in_use.q ql/src/test/queries/clientnegative/lockneg_try_lock_db_in_use.q
+index 85bd4252cb..cbb1e836ad 100644
+--- ql/src/test/queries/clientnegative/lockneg_try_lock_db_in_use.q
++++ ql/src/test/queries/clientnegative/lockneg_try_lock_db_in_use.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:srcpart
+ set hive.lock.numretries=0;
+ 
+ create database lockneg2;
 diff --git ql/src/test/queries/clientnegative/mapreduce_stack_trace.q ql/src/test/queries/clientnegative/mapreduce_stack_trace.q
 index 76c7ae94d4..3d66bc2c49 100644
 --- ql/src/test/queries/clientnegative/mapreduce_stack_trace.q
@@ -4774,6 +4846,16 @@ index 70f2bb4cfc..5ffcaf0bf0 100644
  set hive.security.authorization.manager=org.apache.hadoop.hive.ql.security.authorization.DefaultHiveAuthorizationProvider;
  -- SORT_BEFORE_DIFF
  
+diff --git ql/src/test/queries/clientpositive/alter_rename_table.q ql/src/test/queries/clientpositive/alter_rename_table.q
+index 2061850540..646755bf2a 100644
+--- ql/src/test/queries/clientpositive/alter_rename_table.q
++++ ql/src/test/queries/clientpositive/alter_rename_table.q
+@@ -1,3 +1,5 @@
++--! qt:dataset:srcpart
++--! qt:dataset:src
+ set hive.mapred.mode=nonstrict;
+ create database source;
+ create database target;
 diff --git ql/src/test/queries/clientpositive/alter_table_column_stats.q ql/src/test/queries/clientpositive/alter_table_column_stats.q
 index 8892d3f2af..b24ef968ef 100644
 --- ql/src/test/queries/clientpositive/alter_table_column_stats.q
@@ -4792,6 +4874,16 @@ index 6ca3be3139..b7717f9751 100644
  -- Tests that when overwriting a partition in a table after altering the serde properties
  -- the partition metadata is updated as well.
  
+diff --git ql/src/test/queries/clientpositive/alter_table_stats_status.q ql/src/test/queries/clientpositive/alter_table_stats_status.q
+index 8e07b81043..9101f30023 100644
+--- ql/src/test/queries/clientpositive/alter_table_stats_status.q
++++ ql/src/test/queries/clientpositive/alter_table_stats_status.q
+@@ -1,3 +1,5 @@
++--! qt:dataset:srcpart
++--! qt:dataset:src
+ create database statsdb;
+ use statsdb;
+ create table srctable like default.src;
 diff --git ql/src/test/queries/clientpositive/alter_table_update_status.q ql/src/test/queries/clientpositive/alter_table_update_status.q
 index 9415c978b5..8882584d78 100644
 --- ql/src/test/queries/clientpositive/alter_table_update_status.q
@@ -4875,6 +4967,16 @@ index e9616418d8..75bd579b6e 100644
  set hive.mapred.mode=nonstrict;
  set hive.archive.enabled = true;
  set hive.exec.submitviachild=false;
+diff --git ql/src/test/queries/clientpositive/archive_multi.q ql/src/test/queries/clientpositive/archive_multi.q
+index c18f99169d..60cb4a9733 100644
+--- ql/src/test/queries/clientpositive/archive_multi.q
++++ ql/src/test/queries/clientpositive/archive_multi.q
+@@ -1,3 +1,5 @@
++--! qt:dataset:srcpart
++--! qt:dataset:src
+ set hive.mapred.mode=nonstrict;
+ set hive.archive.enabled = true;
+ ;
 diff --git ql/src/test/queries/clientpositive/array_map_access_nonconstant.q ql/src/test/queries/clientpositive/array_map_access_nonconstant.q
 index ea6e9d5992..154641e8ba 100644
 --- ql/src/test/queries/clientpositive/array_map_access_nonconstant.q
@@ -15679,6 +15781,16 @@ index ade9fb408c..cb38be6fd2 100644
  set hive.fetch.task.conversion=more;
  
  drop table timestamp_udf;
+diff --git ql/src/test/queries/clientpositive/touch.q ql/src/test/queries/clientpositive/touch.q
+index 6686b68eae..8711b7775c 100644
+--- ql/src/test/queries/clientpositive/touch.q
++++ ql/src/test/queries/clientpositive/touch.q
+@@ -1,3 +1,5 @@
++--! qt:dataset:srcpart
++--! qt:dataset:src
+ create database tc;
+ 
+ create table tc.tstsrc like default.src;
 diff --git ql/src/test/queries/clientpositive/transform1.q ql/src/test/queries/clientpositive/transform1.q
 index f2d23b9a36..bb20cbbad3 100644
 --- ql/src/test/queries/clientpositive/transform1.q
@@ -20887,6 +20999,43 @@ index c498ab39dc..5cdecb58e0 100644
  PREHOOK: query: SHOW TABLES IN test_db "test*"
  PREHOOK: type: SHOWTABLES
  PREHOOK: Input: database:test_db
+diff --git ql/src/test/results/clientpositive/spark/temp_table.q.out ql/src/test/results/clientpositive/spark/temp_table.q.out
+index 71fa11d9b8..ff0854691f 100644
+--- ql/src/test/results/clientpositive/spark/temp_table.q.out
++++ ql/src/test/results/clientpositive/spark/temp_table.q.out
+@@ -369,32 +369,6 @@ POSTHOOK: Input: default@bay
+ 103	val_103
+ 104	val_104
+ 104	val_104
+-PREHOOK: query: SHOW TABLES
+-PREHOOK: type: SHOWTABLES
+-PREHOOK: Input: database:default
+-POSTHOOK: query: SHOW TABLES
+-POSTHOOK: type: SHOWTABLES
+-POSTHOOK: Input: database:default
+-alltypesorc
+-alltypesparquet
+-bar
+-bay
+-baz
+-cbo_t1
+-cbo_t2
+-cbo_t3
+-foo
+-lineitem
+-part
+-src
+-src1
+-src_cbo
+-src_json
+-src_sequencefile
+-src_thrift
+-srcbucket
+-srcbucket2
+-srcpart
+ PREHOOK: query: CREATE DATABASE two
+ PREHOOK: type: CREATEDATABASE
+ PREHOOK: Output: database:two
 diff --git ql/src/test/results/clientpositive/temp_table_truncate.q.out ql/src/test/results/clientpositive/temp_table_truncate.q.out
 index 23084cc92a..eb491a43cd 100644
 --- ql/src/test/results/clientpositive/temp_table_truncate.q.out
