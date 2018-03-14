@@ -570,7 +570,7 @@ index ee025f1549..e69de29bb2 100644
 --- Druid Table
 -
 diff --git data/scripts/q_test_init.sql data/scripts/q_test_init.sql
-index 5d36b6f7b9..df0582814a 100644
+index 5d36b6f7b9..a269c55302 100644
 --- data/scripts/q_test_init.sql
 +++ data/scripts/q_test_init.sql
 @@ -1,224 +1,4 @@
@@ -798,62 +798,10 @@ index 5d36b6f7b9..df0582814a 100644
  
  --
  -- Function qtest_get_java_boolean
-@@ -226,130 +6,5 @@ OVERWRITE INTO TABLE primitives PARTITION(year=2009, month=4);
- DROP FUNCTION IF EXISTS qtest_get_java_boolean;
- CREATE FUNCTION qtest_get_java_boolean AS 'org.apache.hadoop.hive.ql.udf.generic.GenericUDFTestGetJavaBoolean';
+@@ -278,78 +58,5 @@ STORED AS
+ INPUTFORMAT 'org.apache.hadoop.mapred.SequenceFileInputFormat'
+ OUTPUTFORMAT 'org.apache.hadoop.mapred.SequenceFileOutputFormat';
  
----
---- Table dest1
----
--DROP TABLE IF EXISTS dest1;
--
--CREATE TABLE dest1 (key STRING COMMENT 'default', value STRING COMMENT 'default')
--STORED AS
--INPUTFORMAT 'org.apache.hadoop.mapred.TextInputFormat'
--OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat';
--
----
---- Table dest2
----
--DROP TABLE IF EXISTS dest2;
--
--CREATE TABLE dest2 (key STRING COMMENT 'default', value STRING COMMENT 'default')
--STORED AS
--INPUTFORMAT 'org.apache.hadoop.mapred.TextInputFormat'
--OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat';
--
----
---- Table dest3
----
--DROP TABLE IF EXISTS dest3;
--
--CREATE TABLE dest3 (key STRING COMMENT 'default', value STRING COMMENT 'default')
--PARTITIONED BY (ds STRING, hr STRING)
--STORED AS
--INPUTFORMAT 'org.apache.hadoop.mapred.TextInputFormat'
--OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat';
--ALTER TABLE dest3 ADD PARTITION (ds='2008-04-08',hr='12');
--
----
---- Table dest4
----
--DROP TABLE IF EXISTS dest4;
--
--CREATE TABLE dest4 (key STRING COMMENT 'default', value STRING COMMENT 'default')
--STORED AS
--INPUTFORMAT 'org.apache.hadoop.mapred.TextInputFormat'
--OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat';
--
----
---- Table dest4_sequencefile
----
--DROP TABLE IF EXISTS dest4_sequencefile;
--
--CREATE TABLE dest4_sequencefile (key STRING COMMENT 'default', value STRING COMMENT 'default')
--STORED AS
--INPUTFORMAT 'org.apache.hadoop.mapred.SequenceFileInputFormat'
--OUTPUTFORMAT 'org.apache.hadoop.mapred.SequenceFileOutputFormat';
--
 -
 ---
 --- CBO tables
@@ -1398,6 +1346,28 @@ index 82590ce853..d6fa738fe7 100644
    }
  
    private CliDriver getCliDriver() {
+diff --git itests/util/src/main/java/org/apache/hadoop/hive/ql/parse/CoreParseNegative.java itests/util/src/main/java/org/apache/hadoop/hive/ql/parse/CoreParseNegative.java
+index f087393d2b..a071689075 100644
+--- itests/util/src/main/java/org/apache/hadoop/hive/ql/parse/CoreParseNegative.java
++++ itests/util/src/main/java/org/apache/hadoop/hive/ql/parse/CoreParseNegative.java
+@@ -19,6 +19,7 @@
+ import static org.junit.Assert.assertTrue;
+ import static org.junit.Assert.fail;
+ 
++import java.io.File;
+ import java.io.Serializable;
+ import java.util.List;
+ 
+@@ -104,6 +105,9 @@ public void runTest(String tname, String fname, String fpath) throws Exception {
+         qt.init(fname);
+         firstRun = false;
+       }
++
++      qt.cliInit(new File(fpath), false);
++
+       ASTNode tree = qt.parseQuery(fname);
+       List<Task<? extends Serializable>> tasks = qt.analyzeAST(tree);
+       fail("Unexpected success for query: " + fname + debugHint);
 diff --git pom.xml pom.xml
 index 5be30f6696..ac15ed1baa 100644
 --- pom.xml
@@ -20423,6 +20393,387 @@ index db30111775..b57717b08e 100644
  test3a
  test3c
  PREHOOK: query: EXPLAIN
+diff --git ql/src/test/results/clientpositive/llap/cte_5.q.out ql/src/test/results/clientpositive/llap/cte_5.q.out
+index 76ba82961f..a85fbeebce 100644
+--- ql/src/test/results/clientpositive/llap/cte_5.q.out
++++ ql/src/test/results/clientpositive/llap/cte_5.q.out
+@@ -41,28 +41,6 @@ POSTHOOK: query: show tables in mydb
+ POSTHOOK: type: SHOWTABLES
+ POSTHOOK: Input: database:mydb
+ q1
+-PREHOOK: query: show tables
+-PREHOOK: type: SHOWTABLES
+-PREHOOK: Input: database:default
+-POSTHOOK: query: show tables
+-POSTHOOK: type: SHOWTABLES
+-POSTHOOK: Input: database:default
+-alltypesorc
+-alltypesparquet
+-cbo_t1
+-cbo_t2
+-cbo_t3
+-lineitem
+-part
+-src
+-src1
+-src_cbo
+-src_json
+-src_sequencefile
+-src_thrift
+-srcbucket
+-srcbucket2
+-srcpart
+ Warning: Shuffle Join MERGEJOIN[13][tables = [$hdt$_0, $hdt$_1]] in Stage 'Reducer 2' is a cross product
+ PREHOOK: query: explain
+ with q1 as (select * from src where key= '5')
+diff --git ql/src/test/results/clientpositive/llap/cte_mat_4.q.out ql/src/test/results/clientpositive/llap/cte_mat_4.q.out
+index f3947ca6dd..087d9781bb 100644
+--- ql/src/test/results/clientpositive/llap/cte_mat_4.q.out
++++ ql/src/test/results/clientpositive/llap/cte_mat_4.q.out
+@@ -16,29 +16,13 @@ POSTHOOK: Input: _dummy_database@_dummy_table
+ POSTHOOK: Output: default@q1
+ POSTHOOK: Lineage: q1.a SCRIPT []
+ POSTHOOK: Lineage: q1.b SCRIPT []
+-PREHOOK: query: show tables
++PREHOOK: query: show tables like "q1"
+ PREHOOK: type: SHOWTABLES
+ PREHOOK: Input: database:default
+-POSTHOOK: query: show tables
++POSTHOOK: query: show tables like "q1"
+ POSTHOOK: type: SHOWTABLES
+ POSTHOOK: Input: database:default
+-alltypesorc
+-alltypesparquet
+-cbo_t1
+-cbo_t2
+-cbo_t3
+-lineitem
+-part
+ q1
+-src
+-src1
+-src_cbo
+-src_json
+-src_sequencefile
+-src_thrift
+-srcbucket
+-srcbucket2
+-srcpart
+ PREHOOK: query: explain
+ with q1 as (select * from src where key= '5')
+ select a.key
+@@ -127,29 +111,13 @@ POSTHOOK: Output: default@q1
+ 5
+ 5
+ 5
+-PREHOOK: query: show tables
++PREHOOK: query: show tables like "q1"
+ PREHOOK: type: SHOWTABLES
+ PREHOOK: Input: database:default
+-POSTHOOK: query: show tables
++POSTHOOK: query: show tables like "q1"
+ POSTHOOK: type: SHOWTABLES
+ POSTHOOK: Input: database:default
+-alltypesorc
+-alltypesparquet
+-cbo_t1
+-cbo_t2
+-cbo_t3
+-lineitem
+-part
+ q1
+-src
+-src1
+-src_cbo
+-src_json
+-src_sequencefile
+-src_thrift
+-srcbucket
+-srcbucket2
+-srcpart
+ PREHOOK: query: select * from q1
+ PREHOOK: type: QUERY
+ PREHOOK: Input: default@q1
+@@ -167,28 +135,12 @@ POSTHOOK: query: drop table q1
+ POSTHOOK: type: DROPTABLE
+ POSTHOOK: Input: default@q1
+ POSTHOOK: Output: default@q1
+-PREHOOK: query: show tables
++PREHOOK: query: show tables like "q1"
+ PREHOOK: type: SHOWTABLES
+ PREHOOK: Input: database:default
+-POSTHOOK: query: show tables
++POSTHOOK: query: show tables like "q1"
+ POSTHOOK: type: SHOWTABLES
+ POSTHOOK: Input: database:default
+-alltypesorc
+-alltypesparquet
+-cbo_t1
+-cbo_t2
+-cbo_t3
+-lineitem
+-part
+-src
+-src1
+-src_cbo
+-src_json
+-src_sequencefile
+-src_thrift
+-srcbucket
+-srcbucket2
+-srcpart
+ PREHOOK: query: explain
+ with q1 as (select * from src where key= '5')
+ select a.key
+@@ -277,25 +229,9 @@ POSTHOOK: Output: default@q1
+ 5
+ 5
+ 5
+-PREHOOK: query: show tables
++PREHOOK: query: show tables like "q1"
+ PREHOOK: type: SHOWTABLES
+ PREHOOK: Input: database:default
+-POSTHOOK: query: show tables
++POSTHOOK: query: show tables like "q1"
+ POSTHOOK: type: SHOWTABLES
+ POSTHOOK: Input: database:default
+-alltypesorc
+-alltypesparquet
+-cbo_t1
+-cbo_t2
+-cbo_t3
+-lineitem
+-part
+-src
+-src1
+-src_cbo
+-src_json
+-src_sequencefile
+-src_thrift
+-srcbucket
+-srcbucket2
+-srcpart
+diff --git ql/src/test/results/clientpositive/llap/cte_mat_5.q.out ql/src/test/results/clientpositive/llap/cte_mat_5.q.out
+index ccf73ac20d..7f0503bec7 100644
+--- ql/src/test/results/clientpositive/llap/cte_mat_5.q.out
++++ ql/src/test/results/clientpositive/llap/cte_mat_5.q.out
+@@ -41,28 +41,6 @@ POSTHOOK: query: show tables in mydb
+ POSTHOOK: type: SHOWTABLES
+ POSTHOOK: Input: database:mydb
+ q1
+-PREHOOK: query: show tables
+-PREHOOK: type: SHOWTABLES
+-PREHOOK: Input: database:default
+-POSTHOOK: query: show tables
+-POSTHOOK: type: SHOWTABLES
+-POSTHOOK: Input: database:default
+-alltypesorc
+-alltypesparquet
+-cbo_t1
+-cbo_t2
+-cbo_t3
+-lineitem
+-part
+-src
+-src1
+-src_cbo
+-src_json
+-src_sequencefile
+-src_thrift
+-srcbucket
+-srcbucket2
+-srcpart
+ PREHOOK: query: explain
+ with q1 as (select * from src where key= '5')
+ select a.colnum
+diff --git ql/src/test/results/clientpositive/llap/jdbc_handler.q.out ql/src/test/results/clientpositive/llap/jdbc_handler.q.out
+index c5802742e5..58e0293b10 100644
+--- ql/src/test/results/clientpositive/llap/jdbc_handler.q.out
++++ ql/src/test/results/clientpositive/llap/jdbc_handler.q.out
+@@ -70,23 +70,8 @@ POSTHOOK: type: QUERY
+ POSTHOOK: Input: default@dbs
+ POSTHOOK: Input: default@tables
+ #### A masked pattern was here ####
+-alltypesorc	default	MANAGED_TABLE
+-alltypesparquet	default	MANAGED_TABLE
+-cbo_t1	default	MANAGED_TABLE
+-cbo_t2	default	MANAGED_TABLE
+-cbo_t3	default	MANAGED_TABLE
+ dbs	default	EXTERNAL_TABLE
+-lineitem	default	MANAGED_TABLE
+-part	default	MANAGED_TABLE
+ src	default	MANAGED_TABLE
+-src1	default	MANAGED_TABLE
+-src_cbo	default	MANAGED_TABLE
+-src_json	default	MANAGED_TABLE
+-src_sequencefile	default	MANAGED_TABLE
+-src_thrift	default	MANAGED_TABLE
+-srcbucket	default	MANAGED_TABLE
+-srcbucket2	default	MANAGED_TABLE
+-srcpart	default	MANAGED_TABLE
+ tables	default	EXTERNAL_TABLE
+ Warning: Shuffle Join MERGEJOIN[17][tables = [$hdt$_0, $hdt$_1]] in Stage 'Reducer 2' is a cross product
+ PREHOOK: query: explain
+@@ -231,48 +216,9 @@ POSTHOOK: type: QUERY
+ POSTHOOK: Input: default@src
+ POSTHOOK: Input: default@tables
+ #### A masked pattern was here ####
+-alltypesorc	2
+-alltypesparquet	2
+-cbo_t1	2
+-cbo_t2	2
+-cbo_t3	2
+ dbs	2
+-lineitem	2
+-part	2
+ src	2
+-src1	2
+-src_cbo	2
+-src_json	2
+-src_sequencefile	2
+-src_thrift	2
+-srcbucket	2
+-srcbucket2	2
+-srcpart	2
+ tables	2
+-PREHOOK: query: show tables
+-PREHOOK: type: SHOWTABLES
+-PREHOOK: Input: database:default
+-POSTHOOK: query: show tables
+-POSTHOOK: type: SHOWTABLES
+-POSTHOOK: Input: database:default
+-alltypesorc
+-alltypesparquet
+-cbo_t1
+-cbo_t2
+-cbo_t3
+-dbs
+-lineitem
+-part
+-src
+-src1
+-src_cbo
+-src_json
+-src_sequencefile
+-src_thrift
+-srcbucket
+-srcbucket2
+-srcpart
+-tables
+ PREHOOK: query: describe tables
+ PREHOOK: type: DESCTABLE
+ PREHOOK: Input: default@tables
+diff --git ql/src/test/results/clientpositive/llap/resourceplan.q.out ql/src/test/results/clientpositive/llap/resourceplan.q.out
+index 96ed8c67c5..b1c9e0ac9f 100644
+--- ql/src/test/results/clientpositive/llap/resourceplan.q.out
++++ ql/src/test/results/clientpositive/llap/resourceplan.q.out
+@@ -2,34 +2,6 @@ PREHOOK: query: show grant user hive_test_user
+ PREHOOK: type: SHOW_GRANT
+ POSTHOOK: query: show grant user hive_test_user
+ POSTHOOK: type: SHOW_GRANT
+-default	alltypesorc			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	alltypesorc			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	alltypesorc			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	alltypesorc			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	alltypesparquet			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	alltypesparquet			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	alltypesparquet			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	alltypesparquet			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	cbo_t1			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	cbo_t1			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	cbo_t1			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	cbo_t1			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	cbo_t2			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	cbo_t2			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	cbo_t2			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	cbo_t2			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	cbo_t3			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	cbo_t3			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	cbo_t3			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	cbo_t3			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	lineitem			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	lineitem			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	lineitem			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	lineitem			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	part			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	part			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	part			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	part			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+ default	src			hive_test_user	USER	DELETE	true	-1	hive_test_user
+ default	src			hive_test_user	USER	INSERT	true	-1	hive_test_user
+ default	src			hive_test_user	USER	SELECT	true	-1	hive_test_user
+@@ -38,34 +10,6 @@ default	src1			hive_test_user	USER	DELETE	true	-1	hive_test_user
+ default	src1			hive_test_user	USER	INSERT	true	-1	hive_test_user
+ default	src1			hive_test_user	USER	SELECT	true	-1	hive_test_user
+ default	src1			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	src_cbo			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	src_cbo			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	src_cbo			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	src_cbo			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	src_json			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	src_json			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	src_json			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	src_json			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	src_sequencefile			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	src_sequencefile			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	src_sequencefile			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	src_sequencefile			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	src_thrift			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	src_thrift			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	src_thrift			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	src_thrift			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	srcbucket			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	srcbucket			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	srcbucket			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	srcbucket			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	srcbucket2			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	srcbucket2			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	srcbucket2			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	srcbucket2			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	srcpart			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	srcpart			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	srcpart			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	srcpart			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+ PREHOOK: query: DROP DATABASE IF EXISTS SYS CASCADE
+ PREHOOK: type: DROPDATABASE
+ POSTHOOK: query: DROP DATABASE IF EXISTS SYS CASCADE
+diff --git ql/src/test/results/clientpositive/llap/temp_table.q.out ql/src/test/results/clientpositive/llap/temp_table.q.out
+index b04c643697..de0fef2aca 100644
+--- ql/src/test/results/clientpositive/llap/temp_table.q.out
++++ ql/src/test/results/clientpositive/llap/temp_table.q.out
+@@ -395,32 +395,6 @@ POSTHOOK: Input: default@bay
+ 103	val_103
+ 104	val_104
+ 104	val_104
+-PREHOOK: query: SHOW TABLES
+-PREHOOK: type: SHOWTABLES
+-PREHOOK: Input: database:default
+-POSTHOOK: query: SHOW TABLES
+-POSTHOOK: type: SHOWTABLES
+-POSTHOOK: Input: database:default
+-alltypesorc
+-alltypesparquet
+-bar
+-bay
+-baz
+-cbo_t1
+-cbo_t2
+-cbo_t3
+-foo
+-lineitem
+-part
+-src
+-src1
+-src_cbo
+-src_json
+-src_sequencefile
+-src_thrift
+-srcbucket
+-srcbucket2
+-srcpart
+ PREHOOK: query: CREATE DATABASE two
+ PREHOOK: type: CREATEDATABASE
+ PREHOOK: Output: database:two
 diff --git ql/src/test/results/clientpositive/rename_column.q.out ql/src/test/results/clientpositive/rename_column.q.out
 index 6418ce2d55..43abc7f72a 100644
 --- ql/src/test/results/clientpositive/rename_column.q.out
@@ -20571,3 +20922,210 @@ index 23084cc92a..eb491a43cd 100644
  tmp_src
  tmp_srcpart
  PREHOOK: query: SELECT count(*) FROM tmp_src
+diff --git ql/src/test/results/compiler/errors/duplicate_alias.q.out ql/src/test/results/compiler/errors/duplicate_alias.q.out
+index c0ed623e3a..ea9de4b0de 100644
+--- ql/src/test/results/compiler/errors/duplicate_alias.q.out
++++ ql/src/test/results/compiler/errors/duplicate_alias.q.out
+@@ -1,2 +1,2 @@
+ Semantic Exception: 
+-Line 1:20 Ambiguous table alias 'a'
+\ No newline at end of file
++Line 2:20 Ambiguous table alias 'a'
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/garbage.q.out ql/src/test/results/compiler/errors/garbage.q.out
+index fdca829737..1f70a5f881 100644
+--- ql/src/test/results/compiler/errors/garbage.q.out
++++ ql/src/test/results/compiler/errors/garbage.q.out
+@@ -1 +1 @@
+-Parse Error: line 1:0 cannot recognize input near 'this' 'is' 'totally'
+\ No newline at end of file
++Parse Error: line 2:0 cannot recognize input near 'this' 'is' 'totally'
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/insert_wrong_number_columns.q.out ql/src/test/results/compiler/errors/insert_wrong_number_columns.q.out
+index 1bf1354bc1..e54bbb04fc 100644
+--- ql/src/test/results/compiler/errors/insert_wrong_number_columns.q.out
++++ ql/src/test/results/compiler/errors/insert_wrong_number_columns.q.out
+@@ -1,2 +1,2 @@
+ Semantic Exception: 
+-Line 2:23 Cannot insert into target table because column number/types are different 'dest1': Table insclause-0 has 2 columns, but query has 3 columns.
+\ No newline at end of file
++Line 3:23 Cannot insert into target table because column number/types are different 'dest1': Table insclause-0 has 2 columns, but query has 3 columns.
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/invalid_dot.q.out ql/src/test/results/compiler/errors/invalid_dot.q.out
+index df24ac692f..e197d03a45 100644
+--- ql/src/test/results/compiler/errors/invalid_dot.q.out
++++ ql/src/test/results/compiler/errors/invalid_dot.q.out
+@@ -1,2 +1,2 @@
+ Semantic Exception: 
+-Line 2:36 . Operator is only supported on struct or list of struct types 'member'
+\ No newline at end of file
++Line 3:36 . Operator is only supported on struct or list of struct types 'member'
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/invalid_function_param2.q.out ql/src/test/results/compiler/errors/invalid_function_param2.q.out
+index 889b71c037..60606f7a67 100644
+--- ql/src/test/results/compiler/errors/invalid_function_param2.q.out
++++ ql/src/test/results/compiler/errors/invalid_function_param2.q.out
+@@ -1,2 +1,2 @@
+ Semantic Exception: 
+-Line 2:36 Wrong arguments ''abc'': No matching method for class org.apache.hadoop.hive.ql.udf.UDFSubstr with (string, string). Possible choices: _FUNC_(binary, int)  _FUNC_(binary, int, int)  _FUNC_(string, int)  _FUNC_(string, int, int)  
+\ No newline at end of file
++Line 3:36 Wrong arguments ''abc'': No matching method for class org.apache.hadoop.hive.ql.udf.UDFSubstr with (string, string). Possible choices: _FUNC_(binary, int)  _FUNC_(binary, int, int)  _FUNC_(string, int)  _FUNC_(string, int, int)  
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/invalid_index.q.out ql/src/test/results/compiler/errors/invalid_index.q.out
+index e1909b94e7..983a531e62 100644
+--- ql/src/test/results/compiler/errors/invalid_index.q.out
++++ ql/src/test/results/compiler/errors/invalid_index.q.out
+@@ -1,2 +1,2 @@
+ Semantic Exception: 
+-Line 2:36 [] not valid on non-collection types '0': string
+\ No newline at end of file
++Line 3:36 [] not valid on non-collection types '0': string
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/invalid_select.q.out ql/src/test/results/compiler/errors/invalid_select.q.out
+index 9e468d7bfd..31ee0944dd 100644
+--- ql/src/test/results/compiler/errors/invalid_select.q.out
++++ ql/src/test/results/compiler/errors/invalid_select.q.out
+@@ -1 +1 @@
+-Parse Error: line 3:6 missing EOF at '(' near 'trim'
+\ No newline at end of file
++Parse Error: line 4:6 missing EOF at '(' near 'trim'
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/missing_overwrite.q.out ql/src/test/results/compiler/errors/missing_overwrite.q.out
+index 7d3a201f11..361d4f9621 100644
+--- ql/src/test/results/compiler/errors/missing_overwrite.q.out
++++ ql/src/test/results/compiler/errors/missing_overwrite.q.out
+@@ -1 +1 @@
+-Parse Error: line 2:7 cannot recognize input near 'INSERT' 'TABLE' 'dest1' in insert clause
+\ No newline at end of file
++Parse Error: line 3:7 cannot recognize input near 'INSERT' 'TABLE' 'dest1' in insert clause
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/nonkey_groupby.q.out ql/src/test/results/compiler/errors/nonkey_groupby.q.out
+index a13d45dc0b..d828f35008 100644
+--- ql/src/test/results/compiler/errors/nonkey_groupby.q.out
++++ ql/src/test/results/compiler/errors/nonkey_groupby.q.out
+@@ -1,2 +1,2 @@
+ Semantic Exception: 
+-Line 2:44 Expression not in GROUP BY key 'value'
+\ No newline at end of file
++Line 3:44 Expression not in GROUP BY key 'value'
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/quoted_string.q.out ql/src/test/results/compiler/errors/quoted_string.q.out
+index 421540bdcc..7e007c8268 100644
+--- ql/src/test/results/compiler/errors/quoted_string.q.out
++++ ql/src/test/results/compiler/errors/quoted_string.q.out
+@@ -1,2 +1,2 @@
+-Parse Error: line 3:0 character '<EOF>' not supported here
+-line 3:0 character '<EOF>' not supported here
+\ No newline at end of file
++Parse Error: line 4:0 character '<EOF>' not supported here
++line 4:0 character '<EOF>' not supported here
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/unknown_column1.q.out ql/src/test/results/compiler/errors/unknown_column1.q.out
+index 933f07954c..d0e94a59c2 100644
+--- ql/src/test/results/compiler/errors/unknown_column1.q.out
++++ ql/src/test/results/compiler/errors/unknown_column1.q.out
+@@ -1,2 +1,2 @@
+ Semantic Exception: 
+-Line 2:48 Invalid column reference 'dummycol'
+\ No newline at end of file
++Line 3:48 Invalid column reference 'dummycol'
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/unknown_column2.q.out ql/src/test/results/compiler/errors/unknown_column2.q.out
+index b598b879c6..2fe85ee0b1 100644
+--- ql/src/test/results/compiler/errors/unknown_column2.q.out
++++ ql/src/test/results/compiler/errors/unknown_column2.q.out
+@@ -1,2 +1,2 @@
+ Semantic Exception: 
+-Line 2:64 Invalid column reference 'dummykey'
+\ No newline at end of file
++Line 3:64 Invalid column reference 'dummykey'
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/unknown_column3.q.out ql/src/test/results/compiler/errors/unknown_column3.q.out
+index adbfdd9233..dbfc43e270 100644
+--- ql/src/test/results/compiler/errors/unknown_column3.q.out
++++ ql/src/test/results/compiler/errors/unknown_column3.q.out
+@@ -1,2 +1,2 @@
+ Semantic Exception: 
+-Line 2:87 Invalid column reference 'dummycol'
+\ No newline at end of file
++Line 3:87 Invalid column reference 'dummycol'
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/unknown_column4.q.out ql/src/test/results/compiler/errors/unknown_column4.q.out
+index 8ce128589e..88ca495f06 100644
+--- ql/src/test/results/compiler/errors/unknown_column4.q.out
++++ ql/src/test/results/compiler/errors/unknown_column4.q.out
+@@ -1,2 +1,2 @@
+ Semantic Exception: 
+-Line 2:83 Invalid table alias or column reference 'dummysrc': (possible column names are: key, value)
+\ No newline at end of file
++Line 3:83 Invalid table alias or column reference 'dummysrc': (possible column names are: key, value)
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/unknown_column5.q.out ql/src/test/results/compiler/errors/unknown_column5.q.out
+index ea68e21fe8..26b1558326 100644
+--- ql/src/test/results/compiler/errors/unknown_column5.q.out
++++ ql/src/test/results/compiler/errors/unknown_column5.q.out
+@@ -1,2 +1,2 @@
+ Semantic Exception: 
+-Line 2:60 Invalid table alias or column reference 'dummysrc': (possible column names are: key, value)
+\ No newline at end of file
++Line 3:60 Invalid table alias or column reference 'dummysrc': (possible column names are: key, value)
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/unknown_column6.q.out ql/src/test/results/compiler/errors/unknown_column6.q.out
+index a13d45dc0b..d828f35008 100644
+--- ql/src/test/results/compiler/errors/unknown_column6.q.out
++++ ql/src/test/results/compiler/errors/unknown_column6.q.out
+@@ -1,2 +1,2 @@
+ Semantic Exception: 
+-Line 2:44 Expression not in GROUP BY key 'value'
+\ No newline at end of file
++Line 3:44 Expression not in GROUP BY key 'value'
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/unknown_function2.q.out ql/src/test/results/compiler/errors/unknown_function2.q.out
+index 88b15ec5ca..1beddc4414 100644
+--- ql/src/test/results/compiler/errors/unknown_function2.q.out
++++ ql/src/test/results/compiler/errors/unknown_function2.q.out
+@@ -1,2 +1,2 @@
+ Semantic Exception: 
+-Line 2:60 Invalid function 'anotherdummyfn'
+\ No newline at end of file
++Line 3:60 Invalid function 'anotherdummyfn'
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/unknown_function3.q.out ql/src/test/results/compiler/errors/unknown_function3.q.out
+index 88b15ec5ca..1beddc4414 100644
+--- ql/src/test/results/compiler/errors/unknown_function3.q.out
++++ ql/src/test/results/compiler/errors/unknown_function3.q.out
+@@ -1,2 +1,2 @@
+ Semantic Exception: 
+-Line 2:60 Invalid function 'anotherdummyfn'
+\ No newline at end of file
++Line 3:60 Invalid function 'anotherdummyfn'
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/unknown_table2.q.out ql/src/test/results/compiler/errors/unknown_table2.q.out
+index d031fae3c6..88a48dd94b 100644
+--- ql/src/test/results/compiler/errors/unknown_table2.q.out
++++ ql/src/test/results/compiler/errors/unknown_table2.q.out
+@@ -1,2 +1,2 @@
+ Semantic Exception: 
+-Line 2:23 Table not found 'dummyDest'
+\ No newline at end of file
++Line 3:23 Table not found 'dummyDest'
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/wrong_distinct1.q.out ql/src/test/results/compiler/errors/wrong_distinct1.q.out
+index 11f48a243b..de81b5bdec 100644
+--- ql/src/test/results/compiler/errors/wrong_distinct1.q.out
++++ ql/src/test/results/compiler/errors/wrong_distinct1.q.out
+@@ -1,2 +1,2 @@
+ Semantic Exception: 
+-2:88 SELECT DISTINCT and GROUP BY can not be in the same query. Error encountered near token 'key'
+\ No newline at end of file
++3:88 SELECT DISTINCT and GROUP BY can not be in the same query. Error encountered near token 'key'
+\ No newline at end of file
+diff --git ql/src/test/results/compiler/errors/wrong_distinct2.q.out ql/src/test/results/compiler/errors/wrong_distinct2.q.out
+index 6a492d2d3d..637ba721f4 100644
+--- ql/src/test/results/compiler/errors/wrong_distinct2.q.out
++++ ql/src/test/results/compiler/errors/wrong_distinct2.q.out
+@@ -1 +1 @@
+-Parse Error: line 2:45 cannot recognize input near ',' 'DISTINCT' 'substr' in lateral view
+\ No newline at end of file
++Parse Error: line 3:45 cannot recognize input near ',' 'DISTINCT' 'substr' in lateral view
+\ No newline at end of file
