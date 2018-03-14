@@ -1367,6 +1367,20 @@ index 0497d25ffa..8b70c04be3 100644
  CREATE TABLE hbase_ppd_keyrange(key int, value string) 
  STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
  WITH SERDEPROPERTIES ("hbase.columns.mapping" = ":key#binary,cf:string");
+diff --git itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreCompareCliDriver.java itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreCompareCliDriver.java
+index fbca4241d4..c36d231704 100644
+--- itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreCompareCliDriver.java
++++ itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreCompareCliDriver.java
+@@ -133,6 +133,9 @@ public void runTest(String tname, String fname, String fpath) throws Exception {
+       }
+ 
+       int ecode = 0;
++      
++      qt.cliInit(new File(fpath), false);
++      
+       List<String> outputs = new ArrayList<>(versionFiles.size());
+       for (String versionFile : versionFiles) {
+         // 1 for "_" after tname; 3 for ".qv" at the end. Version is in between.
 diff --git itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java
 index 82590ce853..d6fa738fe7 100644
 --- itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java
@@ -1571,6 +1585,13 @@ index 0f40fad90d..b6e231b88d 100644
  DROP VIEW xxx4;
  CREATE VIEW xxx4 
  AS 
+diff --git ql/src/test/queries/clientnegative/ambiguous_col.q ql/src/test/queries/clientnegative/ambiguous_col.q
+index 866cec126f..e8f2c8d750 100644
+--- ql/src/test/queries/clientnegative/ambiguous_col.q
++++ ql/src/test/queries/clientnegative/ambiguous_col.q
+@@ -1 +1,2 @@
++--! qt:dataset:src
+ FROM (SELECT key, concat(value) AS key FROM src) a SELECT a.key;
 diff --git ql/src/test/queries/clientnegative/analyze_view.q ql/src/test/queries/clientnegative/analyze_view.q
 index af4970f52e..37a3709a71 100644
 --- ql/src/test/queries/clientnegative/analyze_view.q
@@ -3396,6 +3417,15 @@ index 300d145508..afb0a18670 100644
  set hive.support.quoted.identifiers=none;
  EXPLAIN
  SELECT `..`, count(1) FROM srcpart GROUP BY `..`;
+diff --git ql/src/test/queries/clientnegative/right_side_join.q ql/src/test/queries/clientnegative/right_side_join.q
+index 78771c83bf..6450c3a0b6 100644
+--- ql/src/test/queries/clientnegative/right_side_join.q
++++ ql/src/test/queries/clientnegative/right_side_join.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:alltypesorc
+ set hive.cbo.enable=false;
+ 
+ explain  
 diff --git ql/src/test/queries/clientnegative/sample.q ql/src/test/queries/clientnegative/sample.q
 index 0086352f8c..7f51f0bcdd 100644
 --- ql/src/test/queries/clientnegative/sample.q
@@ -3773,6 +3803,15 @@ index a9bc6ee6a3..74e9a07d2f 100644
  
  
  select count(*) 
+diff --git ql/src/test/queries/clientnegative/subquery_in_lhs.q ql/src/test/queries/clientnegative/subquery_in_lhs.q
+index 087c3f3772..e24de1e64c 100644
+--- ql/src/test/queries/clientnegative/subquery_in_lhs.q
++++ ql/src/test/queries/clientnegative/subquery_in_lhs.q
+@@ -1,2 +1,3 @@
++--! qt:dataset:part
+ 
+ select * from part where (select max(p_size) from part) IN (select p_size from part);
+\ No newline at end of file
 diff --git ql/src/test/queries/clientnegative/subquery_in_on.q ql/src/test/queries/clientnegative/subquery_in_on.q
 index 5f44f72fb6..fb30d447c6 100644
 --- ql/src/test/queries/clientnegative/subquery_in_on.q
@@ -3811,6 +3850,22 @@ index e71a60d662..47fb51330a 100644
  select * from part where p_size >
      (select count(*) from part p where p.p_mfgr = part.p_mfgr group by p_type);
 \ No newline at end of file
+diff --git ql/src/test/queries/clientnegative/subquery_scalar_multi_columns.q ql/src/test/queries/clientnegative/subquery_scalar_multi_columns.q
+index 1f6ad1a59a..948ed0ea4a 100644
+--- ql/src/test/queries/clientnegative/subquery_scalar_multi_columns.q
++++ ql/src/test/queries/clientnegative/subquery_scalar_multi_columns.q
+@@ -1,2 +1,3 @@
++--! qt:dataset:part
+ set hive.mapred.mode=nonstrict;
+ select p_name from part where p_size > (select p_size, p_type from part);
+diff --git ql/src/test/queries/clientnegative/subquery_scalar_multi_rows.q ql/src/test/queries/clientnegative/subquery_scalar_multi_rows.q
+index 14b68b9057..77f4f085c7 100644
+--- ql/src/test/queries/clientnegative/subquery_scalar_multi_rows.q
++++ ql/src/test/queries/clientnegative/subquery_scalar_multi_rows.q
+@@ -1,2 +1,3 @@
++--! qt:dataset:part
+ set hive.mapred.mode=nonstrict;
+ select p_name from part where p_size > (select p_size from part);
 diff --git ql/src/test/queries/clientnegative/subquery_select_aggregate.q ql/src/test/queries/clientnegative/subquery_select_aggregate.q
 index 8da8521521..8bd44608ed 100644
 --- ql/src/test/queries/clientnegative/subquery_select_aggregate.q
@@ -4939,6 +4994,15 @@ index 2334bc6535..80b2fb4a71 100644
  -- check cluster/distribute/partitionBy
  SELECT * FROM SRC x where x.key = 20 CLUSTER BY (key,value) ;
  
+diff --git ql/src/test/queries/clientpositive/ambiguous_col.q ql/src/test/queries/clientpositive/ambiguous_col.q
+index d1cebeb506..f7d9f8aac1 100644
+--- ql/src/test/queries/clientpositive/ambiguous_col.q
++++ ql/src/test/queries/clientpositive/ambiguous_col.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src1
+ set hive.support.quoted.identifiers=none;
+ -- TOK_ALLCOLREF
+ explain select * from (select a.key, a.* from (select * from src) a join (select * from src1) b on (a.key = b.key)) t;
 diff --git ql/src/test/queries/clientpositive/analyze_tbl_part.q ql/src/test/queries/clientpositive/analyze_tbl_part.q
 index 54e816a9ff..fd486d610c 100644
 --- ql/src/test/queries/clientpositive/analyze_tbl_part.q
@@ -6062,10 +6126,11 @@ index 7aca53a9c5..cab45dbdac 100644
  set hive.cbo.enable=true;
  set hive.exec.check.crossproducts=false;
 diff --git ql/src/test/queries/clientpositive/cbo_gby_empty.q ql/src/test/queries/clientpositive/cbo_gby_empty.q
-index 7b23d015fb..423a4827c1 100644
+index 7b23d015fb..323293233b 100644
 --- ql/src/test/queries/clientpositive/cbo_gby_empty.q
 +++ ql/src/test/queries/clientpositive/cbo_gby_empty.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src
 +--! qt:dataset:cbo_t3
  set hive.mapred.mode=nonstrict;
  set hive.cbo.enable=true;
@@ -6161,10 +6226,11 @@ index 0f18e2285a..0e73621feb 100644
  set hive.cbo.enable=true;
  set hive.cbo.returnpath.hiveop=true;
 diff --git ql/src/test/queries/clientpositive/cbo_rp_gby_empty.q ql/src/test/queries/clientpositive/cbo_rp_gby_empty.q
-index 48d8cb1a18..1799af0bb8 100644
+index 48d8cb1a18..3c99ef4cc6 100644
 --- ql/src/test/queries/clientpositive/cbo_rp_gby_empty.q
 +++ ql/src/test/queries/clientpositive/cbo_rp_gby_empty.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src
 +--! qt:dataset:cbo_t3
  set hive.mapred.mode=nonstrict;
  set hive.cbo.enable=true;
@@ -6321,10 +6387,11 @@ index 8d3aac8a44..feedcba442 100644
  set hive.cbo.enable=true;
  set hive.cbo.returnpath.hiveop=true;
 diff --git ql/src/test/queries/clientpositive/cbo_rp_union.q ql/src/test/queries/clientpositive/cbo_rp_union.q
-index cf2cf40210..ab39dae5f9 100644
+index cf2cf40210..124eac028d 100644
 --- ql/src/test/queries/clientpositive/cbo_rp_union.q
 +++ ql/src/test/queries/clientpositive/cbo_rp_union.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:cbo_t3
 +--! qt:dataset:cbo_t2
  set hive.mapred.mode=nonstrict;
  set hive.cbo.enable=true;
@@ -6449,10 +6516,11 @@ index 8534cecd37..680726d52d 100644
  set hive.mapred.mode=nonstrict;
  set hive.cbo.enable=true;
 diff --git ql/src/test/queries/clientpositive/cbo_union.q ql/src/test/queries/clientpositive/cbo_union.q
-index 42d28e161a..0e3a6fcdc6 100644
+index 42d28e161a..1644745828 100644
 --- ql/src/test/queries/clientpositive/cbo_union.q
 +++ ql/src/test/queries/clientpositive/cbo_union.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:cbo_t3
 +--! qt:dataset:cbo_t2
  set hive.mapred.mode=nonstrict;
  set hive.cbo.enable=true;
@@ -8105,10 +8173,11 @@ index 498a128c87..cf8b864374 100644
  
  set hive.mapred.mode=nonstrict;
 diff --git ql/src/test/queries/clientpositive/explainanalyze_5.q ql/src/test/queries/clientpositive/explainanalyze_5.q
-index 696064c874..f8c66c9203 100644
+index 696064c874..00d227c811 100644
 --- ql/src/test/queries/clientpositive/explainanalyze_5.q
 +++ ql/src/test/queries/clientpositive/explainanalyze_5.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.map.aggr=false;
  
@@ -9971,6 +10040,15 @@ index b3b586f0c6..4e92923b38 100644
  select
    interval '10-11' year to month,
    interval '10' year,
+diff --git ql/src/test/queries/clientpositive/interval_2.q ql/src/test/queries/clientpositive/interval_2.q
+index f622c7670a..869c4e5927 100644
+--- ql/src/test/queries/clientpositive/interval_2.q
++++ ql/src/test/queries/clientpositive/interval_2.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ -- group-by/order-by/aggregation functions
+ 
+ select
 diff --git ql/src/test/queries/clientpositive/interval_3.q ql/src/test/queries/clientpositive/interval_3.q
 index 3b05448cc7..ee0f83cdee 100644
 --- ql/src/test/queries/clientpositive/interval_3.q
@@ -10026,10 +10104,15 @@ index 2d3c25e93a..607781c4fb 100644
  
  ADD JAR ivy://:udfexampleadd:1.0;
 diff --git ql/src/test/queries/clientpositive/jdbc_handler.q ql/src/test/queries/clientpositive/jdbc_handler.q
-index 7e215504f6..afbd1e1387 100644
+index 7e215504f6..2211da4139 100644
 --- ql/src/test/queries/clientpositive/jdbc_handler.q
 +++ ql/src/test/queries/clientpositive/jdbc_handler.q
-@@ -48,6 +48,4 @@ from
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ 
+ set hive.strict.checks.cartesian.product= false;
+ CREATE EXTERNAL TABLE tables
+@@ -48,6 +49,4 @@ from
    on (t2.key-1) = t1.db_id
  order by a,b;
  
@@ -11998,6 +12081,15 @@ index 68f6644864..6bed476fff 100644
  set hive.mapred.mode=nonstrict;
  -- SORT_QUERY_RESULTS
  create table e1 (key string, keyD double);
+diff --git ql/src/test/queries/clientpositive/multi_insert_gby4.q ql/src/test/queries/clientpositive/multi_insert_gby4.q
+index 2e22096f7e..d4858137d8 100644
+--- ql/src/test/queries/clientpositive/multi_insert_gby4.q
++++ ql/src/test/queries/clientpositive/multi_insert_gby4.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ -- SORT_QUERY_RESULTS
+ 
+ create table e1 (key string, count int);
 diff --git ql/src/test/queries/clientpositive/multi_insert_lateral_view.q ql/src/test/queries/clientpositive/multi_insert_lateral_view.q
 index d80717fb25..481bdf2095 100644
 --- ql/src/test/queries/clientpositive/multi_insert_lateral_view.q
@@ -12061,6 +12153,15 @@ index 7e80a9dddd..4d9460db99 100644
  set hive.mapred.mode=nonstrict;
  set hive.exec.pre.hooks=;
  
+diff --git ql/src/test/queries/clientpositive/noalias_subq1.q ql/src/test/queries/clientpositive/noalias_subq1.q
+index cf49301e4e..c346f7eaba 100644
+--- ql/src/test/queries/clientpositive/noalias_subq1.q
++++ ql/src/test/queries/clientpositive/noalias_subq1.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ set hive.mapred.mode=nonstrict;
+ EXPLAIN
+ SELECT c1 FROM (select value as c1, key as c2 from src) x where c2 < 100;
 diff --git ql/src/test/queries/clientpositive/nomore_ambiguous_table_col.q ql/src/test/queries/clientpositive/nomore_ambiguous_table_col.q
 index 6795475699..77b782cd24 100644
 --- ql/src/test/queries/clientpositive/nomore_ambiguous_table_col.q
@@ -12085,6 +12186,16 @@ index c3b88453d8..1a49398202 100644
 +--! qt:dataset:part
  
  create temporary function mylastval as 'org.apache.hadoop.hive.ql.udf.generic.GenericUDAFLastValue';
+ 
+diff --git ql/src/test/queries/clientpositive/nonblock_op_deduplicate.q ql/src/test/queries/clientpositive/nonblock_op_deduplicate.q
+index 77dee5a976..677b4c9d27 100644
+--- ql/src/test/queries/clientpositive/nonblock_op_deduplicate.q
++++ ql/src/test/queries/clientpositive/nonblock_op_deduplicate.q
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
++--! qt:dataset:src
+ set hive.mapred.mode=nonstrict;
+ -- SORT_QUERY_RESULTS
  
 diff --git ql/src/test/queries/clientpositive/nonmr_fetch.q ql/src/test/queries/clientpositive/nonmr_fetch.q
 index dffdc2c7a8..1b5ab5615f 100644
@@ -12315,6 +12426,15 @@ index 3fe42bb21d..ce86e5d323 100644
  -- Create a table with one column, write to it, then add an additional column
  -- This can break reads
  
+diff --git ql/src/test/queries/clientpositive/orc_empty_files.q ql/src/test/queries/clientpositive/orc_empty_files.q
+index dd0e81a1a2..11e8c23e10 100644
+--- ql/src/test/queries/clientpositive/orc_empty_files.q
++++ ql/src/test/queries/clientpositive/orc_empty_files.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ CREATE TABLE test_orc (key STRING, cnt INT)
+ CLUSTERED BY (key) INTO 3 BUCKETS
+ ROW FORMAT SERDE 'org.apache.hadoop.hive.ql.io.orc.OrcSerde' 
 diff --git ql/src/test/queries/clientpositive/orc_empty_strings.q ql/src/test/queries/clientpositive/orc_empty_strings.q
 index c69414a034..e0d4e95d27 100644
 --- ql/src/test/queries/clientpositive/orc_empty_strings.q
@@ -13572,6 +13692,24 @@ index 0bb949d2e3..a3abf7bb9d 100644
  set hive.mapred.mode=nonstrict;
  --HIVE-3926 PPD on virtual column of partitioned table is not working
  
+diff --git ql/src/test/queries/clientpositive/ppd_windowing1.q ql/src/test/queries/clientpositive/ppd_windowing1.q
+index f380eab72b..e7d74fd51b 100644
+--- ql/src/test/queries/clientpositive/ppd_windowing1.q
++++ ql/src/test/queries/clientpositive/ppd_windowing1.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ set hive.mapred.mode=nonstrict;
+ set hive.optimize.ppd=true;
+ set hive.ppd.remove.duplicatefilters=false;
+diff --git ql/src/test/queries/clientpositive/ppd_windowing2.q ql/src/test/queries/clientpositive/ppd_windowing2.q
+index abfe89e299..4f045a4c37 100644
+--- ql/src/test/queries/clientpositive/ppd_windowing2.q
++++ ql/src/test/queries/clientpositive/ppd_windowing2.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ set hive.mapred.mode=nonstrict;
+ set hive.optimize.ppd=true;
+ set hive.ppd.remove.duplicatefilters=false;
 diff --git ql/src/test/queries/clientpositive/ppr_allchildsarenull.q ql/src/test/queries/clientpositive/ppr_allchildsarenull.q
 index 6146073ae7..5345c51736 100644
 --- ql/src/test/queries/clientpositive/ppr_allchildsarenull.q
@@ -13925,6 +14063,15 @@ index d703b8ee50..eea365dc6b 100644
  -- INCLUDE_HADOOP_MAJOR_VERSIONS(0.23)
  
  CREATE TABLE fact_daily(x int) PARTITIONED BY (ds STRING);
+diff --git ql/src/test/queries/clientpositive/reduceSinkDeDuplication_pRS_key_empty.q ql/src/test/queries/clientpositive/reduceSinkDeDuplication_pRS_key_empty.q
+index d72fad5c0f..f92229560a 100644
+--- ql/src/test/queries/clientpositive/reduceSinkDeDuplication_pRS_key_empty.q
++++ ql/src/test/queries/clientpositive/reduceSinkDeDuplication_pRS_key_empty.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ set hive.mapred.mode=nonstrict;
+ set hive.cbo.enable=false;
+ 
 diff --git ql/src/test/queries/clientpositive/reduce_deduplicate.q ql/src/test/queries/clientpositive/reduce_deduplicate.q
 index 5386590e05..7581982740 100644
 --- ql/src/test/queries/clientpositive/reduce_deduplicate.q
@@ -14480,6 +14627,15 @@ index 7bf1e60a5d..0804c2d2bf 100644
  set hivevar:key1=value1;
  
  EXPLAIN SELECT * FROM src where key="${key1}";
+diff --git ql/src/test/queries/clientpositive/setop_subq.q ql/src/test/queries/clientpositive/setop_subq.q
+index a88e512998..b968a13051 100644
+--- ql/src/test/queries/clientpositive/setop_subq.q
++++ ql/src/test/queries/clientpositive/setop_subq.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ set hive.mapred.mode=nonstrict;
+ 
+ explain select key from ((select key from src) union (select key from src))subq;
 diff --git ql/src/test/queries/clientpositive/sharedworkext.q ql/src/test/queries/clientpositive/sharedworkext.q
 index b1801eabea..ed42676c29 100644
 --- ql/src/test/queries/clientpositive/sharedworkext.q
@@ -15149,6 +15305,15 @@ index d473081784..76d974f658 100644
  dfs -cp ${system:hive.root}/data/files/ext_test ${system:test.tmp.dir}/analyze_external;
  
  -- test analyze table compute statistiscs [noscan] on external table 
+diff --git ql/src/test/queries/clientpositive/stats_null_optimizer.q ql/src/test/queries/clientpositive/stats_null_optimizer.q
+index 1114e5ab2e..13b4a3c7c8 100644
+--- ql/src/test/queries/clientpositive/stats_null_optimizer.q
++++ ql/src/test/queries/clientpositive/stats_null_optimizer.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ explain select count(key) from (select null as key from src)src;
+ 
+ select count(key) from (select null as key from src)src;
 diff --git ql/src/test/queries/clientpositive/stats_publisher_error_1.q ql/src/test/queries/clientpositive/stats_publisher_error_1.q
 index 50751f7170..12ce1eb1b0 100644
 --- ql/src/test/queries/clientpositive/stats_publisher_error_1.q
@@ -15204,6 +15369,15 @@ index 98e663b6b7..12863b9269 100644
  set hive.mapred.mode=nonstrict;
  EXPLAIN
  SELECT a.k, a.c
+diff --git ql/src/test/queries/clientpositive/subq_where_serialization.q ql/src/test/queries/clientpositive/subq_where_serialization.q
+index 91290c4d85..de68c8aa29 100644
+--- ql/src/test/queries/clientpositive/subq_where_serialization.q
++++ ql/src/test/queries/clientpositive/subq_where_serialization.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ set hive.mapred.mode=nonstrict;
+ set hive.auto.convert.join=true;
+ set hive.auto.convert.join.noconditionaltask.size=10000000;
 diff --git ql/src/test/queries/clientpositive/subquery_alias.q ql/src/test/queries/clientpositive/subquery_alias.q
 index fcdb64ce00..9ed40be30f 100644
 --- ql/src/test/queries/clientpositive/subquery_alias.q
@@ -15379,6 +15553,15 @@ index d442f077c0..7664e0b585 100644
  
  
  select *
+diff --git ql/src/test/queries/clientpositive/subquery_unqual_corr_expr.q ql/src/test/queries/clientpositive/subquery_unqual_corr_expr.q
+index 78a8b207c0..50355ebe6b 100644
+--- ql/src/test/queries/clientpositive/subquery_unqual_corr_expr.q
++++ ql/src/test/queries/clientpositive/subquery_unqual_corr_expr.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ set hive.mapred.mode=nonstrict;
+ 
+ explain 
 diff --git ql/src/test/queries/clientpositive/subquery_unqualcolumnrefs.q ql/src/test/queries/clientpositive/subquery_unqualcolumnrefs.q
 index dad6f23497..753032d9de 100644
 --- ql/src/test/queries/clientpositive/subquery_unqualcolumnrefs.q
@@ -16790,6 +16973,15 @@ index 7fa9bf1564..c7cdd7f3a8 100644
  set hive.fetch.task.conversion=more;
  
  DESCRIBE FUNCTION reflect;
+diff --git ql/src/test/queries/clientpositive/udf_reflect2.q ql/src/test/queries/clientpositive/udf_reflect2.q
+index 255dcdb15c..7ebe91436a 100644
+--- ql/src/test/queries/clientpositive/udf_reflect2.q
++++ ql/src/test/queries/clientpositive/udf_reflect2.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ set hive.mapred.mode=nonstrict;
+ set hive.fetch.task.conversion=more;
+ 
 diff --git ql/src/test/queries/clientpositive/udf_regexp.q ql/src/test/queries/clientpositive/udf_regexp.q
 index 12b685b32c..1fac76accc 100644
 --- ql/src/test/queries/clientpositive/udf_regexp.q
@@ -17043,6 +17235,15 @@ index ac4b5242e1..818f80ffa4 100644
  set hive.fetch.task.conversion=more;
  
  -- Conversion of main primitive types to String type:
+diff --git ql/src/test/queries/clientpositive/udf_to_unix_timestamp.q ql/src/test/queries/clientpositive/udf_to_unix_timestamp.q
+index 0a2758edfc..78ecd5684d 100644
+--- ql/src/test/queries/clientpositive/udf_to_unix_timestamp.q
++++ ql/src/test/queries/clientpositive/udf_to_unix_timestamp.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ set hive.fetch.task.conversion=more;
+ 
+ DESCRIBE FUNCTION to_unix_timestamp;
 diff --git ql/src/test/queries/clientpositive/udf_translate.q ql/src/test/queries/clientpositive/udf_translate.q
 index 1f349aac25..42da85c91c 100644
 --- ql/src/test/queries/clientpositive/udf_translate.q
@@ -18324,6 +18525,16 @@ index 22011cf1e7..e31eae8c79 100644
  set hive.explain.user=false;
  set hive.cli.print.header=true;
  SET hive.vectorized.execution.enabled=true;
+diff --git ql/src/test/queries/clientpositive/vector_windowing_streaming.q ql/src/test/queries/clientpositive/vector_windowing_streaming.q
+index 424261a595..e59872ac0f 100644
+--- ql/src/test/queries/clientpositive/vector_windowing_streaming.q
++++ ql/src/test/queries/clientpositive/vector_windowing_streaming.q
+@@ -1,3 +1,5 @@
++--! qt:dataset:part
++--! qt:dataset:alltypesorc
+ set hive.cli.print.header=true;
+ SET hive.vectorized.execution.enabled=true;
+ SET hive.vectorized.execution.reduce.enabled=true;
 diff --git ql/src/test/queries/clientpositive/vectorization_0.q ql/src/test/queries/clientpositive/vectorization_0.q
 index 3af9422717..7a01f9c3cf 100644
 --- ql/src/test/queries/clientpositive/vectorization_0.q
@@ -18867,6 +19078,16 @@ index 7c27e22cfb..a172578a24 100644
 +++ ql/src/test/queries/clientpositive/windowing_navfn.q
 @@ -1,3 +1,4 @@
 +--! qt:dataset:src
+ drop table over10k;
+ 
+ create table over10k(
+diff --git ql/src/test/queries/clientpositive/windowing_streaming.q ql/src/test/queries/clientpositive/windowing_streaming.q
+index 4699e690b1..30f0c1454c 100644
+--- ql/src/test/queries/clientpositive/windowing_streaming.q
++++ ql/src/test/queries/clientpositive/windowing_streaming.q
+@@ -1,3 +1,5 @@
++--! qt:dataset:part
++--! qt:dataset:alltypesorc
  drop table over10k;
  
  create table over10k(
@@ -19473,6 +19694,20 @@ index f7cdf6e8ff..5dba8a3651 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10004]: Line 1:7 Invalid table alias or column reference 'a': (possible column names are: key, value)
 +FAILED: SemanticException [Error 10004]: Line 2:7 Invalid table alias or column reference 'a': (possible column names are: key, value)
+diff --git ql/src/test/results/clientnegative/join_alt_syntax_comma_on.q.out ql/src/test/results/clientnegative/join_alt_syntax_comma_on.q.out
+index 364b6df1cb..f9a632785d 100644
+--- ql/src/test/results/clientnegative/join_alt_syntax_comma_on.q.out
++++ ql/src/test/results/clientnegative/join_alt_syntax_comma_on.q.out
+@@ -1 +1 @@
+-FAILED: ParseException line 3:25 Failed to recognize predicate '<EOF>'. Failed rule: 'joinSource' in join source
++FAILED: ParseException line 4:25 Failed to recognize predicate '<EOF>'. Failed rule: 'joinSource' in join source
+diff --git ql/src/test/results/clientnegative/lateral_view_join.q.out ql/src/test/results/clientnegative/lateral_view_join.q.out
+index b96f18fc6a..3e4332edec 100644
+--- ql/src/test/results/clientnegative/lateral_view_join.q.out
++++ ql/src/test/results/clientnegative/lateral_view_join.q.out
+@@ -1 +1 @@
+-FAILED: ParseException line 1:59 cannot recognize input near 'AS' 'myTable' 'JOIN' in table alias
++FAILED: ParseException line 2:59 cannot recognize input near 'AS' 'myTable' 'JOIN' in table alias
 diff --git ql/src/test/results/clientnegative/nonkey_groupby.q.out ql/src/test/results/clientnegative/nonkey_groupby.q.out
 index bbe928c727..eda09dcf45 100644
 --- ql/src/test/results/clientnegative/nonkey_groupby.q.out
@@ -19487,6 +19722,13 @@ index 8aa512b747..a10cee9923 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10025]: Line 2:7 Expression not in GROUP BY key 'p_mfgr'
 +FAILED: SemanticException [Error 10025]: Line 3:7 Expression not in GROUP BY key 'p_mfgr'
+diff --git ql/src/test/results/clientnegative/ptf_negative_DistributeByOrderBy.q.out ql/src/test/results/clientnegative/ptf_negative_DistributeByOrderBy.q.out
+index e8e8580d6a..ed24fe5344 100644
+--- ql/src/test/results/clientnegative/ptf_negative_DistributeByOrderBy.q.out
++++ ql/src/test/results/clientnegative/ptf_negative_DistributeByOrderBy.q.out
+@@ -1 +1 @@
+-FAILED: ParseException line 3:3 cannot recognize input near 'sum' '(' 'p_retailprice' in expression specification
++FAILED: ParseException line 4:3 cannot recognize input near 'sum' '(' 'p_retailprice' in expression specification
 diff --git ql/src/test/results/clientnegative/ptf_negative_WhereWithRankCond.q.out ql/src/test/results/clientnegative/ptf_negative_WhereWithRankCond.q.out
 index 42f60e7c75..d7425e5172 100644
 --- ql/src/test/results/clientnegative/ptf_negative_WhereWithRankCond.q.out
@@ -19494,6 +19736,20 @@ index 42f60e7c75..d7425e5172 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10004]: Line 5:6 Invalid table alias or column reference 'r': (possible column names are: p_partkey, p_name, p_mfgr, p_brand, p_type, p_size, p_container, p_retailprice, p_comment)
 +FAILED: SemanticException [Error 10004]: Line 6:6 Invalid table alias or column reference 'r': (possible column names are: p_partkey, p_name, p_mfgr, p_brand, p_type, p_size, p_container, p_retailprice, p_comment)
+diff --git ql/src/test/results/clientnegative/ptf_window_boundaries2.q.out ql/src/test/results/clientnegative/ptf_window_boundaries2.q.out
+index c9c1c6d1aa..4d2cac0495 100644
+--- ql/src/test/results/clientnegative/ptf_window_boundaries2.q.out
++++ ql/src/test/results/clientnegative/ptf_window_boundaries2.q.out
+@@ -1 +1 @@
+-FAILED: ParseException line 2:7 cannot recognize input near 'sum' '(' 'p_retailprice' in expression specification
++FAILED: ParseException line 3:7 cannot recognize input near 'sum' '(' 'p_retailprice' in expression specification
+diff --git ql/src/test/results/clientnegative/selectDistinctStarNeg_2.q.out ql/src/test/results/clientnegative/selectDistinctStarNeg_2.q.out
+index b3322930d3..bafa21f083 100644
+--- ql/src/test/results/clientnegative/selectDistinctStarNeg_2.q.out
++++ ql/src/test/results/clientnegative/selectDistinctStarNeg_2.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException 3:36 SELECT DISTINCT and GROUP BY can not be in the same query. Error encountered near token 'key'
++FAILED: SemanticException 4:36 SELECT DISTINCT and GROUP BY can not be in the same query. Error encountered near token 'key'
 diff --git ql/src/test/results/clientnegative/semijoin1.q.out ql/src/test/results/clientnegative/semijoin1.q.out
 index b7a3215c4d..8a7e0206ea 100644
 --- ql/src/test/results/clientnegative/semijoin1.q.out
@@ -19536,6 +19792,13 @@ index b650309c72..0d846bef23 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10250]: org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException: Line 7:7 Invalid SubQuery expression ''val_9'': A predicate on EXISTS/NOT EXISTS SubQuery with implicit Aggregation(no Group By clause) cannot be rewritten.
 +FAILED: SemanticException [Error 10250]: org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException: Line 8:7 Invalid SubQuery expression ''val_9'': A predicate on EXISTS/NOT EXISTS SubQuery with implicit Aggregation(no Group By clause) cannot be rewritten.
+diff --git ql/src/test/results/clientnegative/subquery_in_on.q.out ql/src/test/results/clientnegative/subquery_in_on.q.out
+index 551f0ece7e..ee27eb908e 100644
+--- ql/src/test/results/clientnegative/subquery_in_on.q.out
++++ ql/src/test/results/clientnegative/subquery_in_on.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException: 2:77 Unsupported SubQuery Expression Currently SubQuery expressions are only allowed as Where and Having Clause predicates. Error encountered near token 'p2'
++FAILED: SemanticException org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException: 3:77 Unsupported SubQuery Expression Currently SubQuery expressions are only allowed as Where and Having Clause predicates. Error encountered near token 'p2'
 diff --git ql/src/test/results/clientnegative/subquery_notexists_implicit_gby.q.out ql/src/test/results/clientnegative/subquery_notexists_implicit_gby.q.out
 index b650309c72..0d846bef23 100644
 --- ql/src/test/results/clientnegative/subquery_notexists_implicit_gby.q.out
@@ -19543,6 +19806,13 @@ index b650309c72..0d846bef23 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10250]: org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException: Line 7:7 Invalid SubQuery expression ''val_9'': A predicate on EXISTS/NOT EXISTS SubQuery with implicit Aggregation(no Group By clause) cannot be rewritten.
 +FAILED: SemanticException [Error 10250]: org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException: Line 8:7 Invalid SubQuery expression ''val_9'': A predicate on EXISTS/NOT EXISTS SubQuery with implicit Aggregation(no Group By clause) cannot be rewritten.
+diff --git ql/src/test/results/clientnegative/subquery_subquery_chain.q.out ql/src/test/results/clientnegative/subquery_subquery_chain.q.out
+index e08b86cef0..45425089a4 100644
+--- ql/src/test/results/clientnegative/subquery_subquery_chain.q.out
++++ ql/src/test/results/clientnegative/subquery_subquery_chain.q.out
+@@ -1 +1 @@
+-FAILED: ParseException line 5:39 missing EOF at 'in' near ')'
++FAILED: ParseException line 6:39 missing EOF at 'in' near ')'
 diff --git ql/src/test/results/clientnegative/subquery_windowing_corr.q.out ql/src/test/results/clientnegative/subquery_windowing_corr.q.out
 index daac4bb3c3..f42e064b32 100644
 --- ql/src/test/results/clientnegative/subquery_windowing_corr.q.out
@@ -19704,6 +19974,34 @@ index 7c7582d413..bc2851fead 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10016]: Line 3:13 Argument type mismatch ''1'': "boolean" is expected after WHEN, but "string" is found
 +FAILED: SemanticException [Error 10016]: Line 4:13 Argument type mismatch ''1'': "boolean" is expected after WHEN, but "string" is found
+diff --git ql/src/test/results/clientnegative/unionClusterBy.q.out ql/src/test/results/clientnegative/unionClusterBy.q.out
+index 7f014137dc..1f0dddcf2c 100644
+--- ql/src/test/results/clientnegative/unionClusterBy.q.out
++++ ql/src/test/results/clientnegative/unionClusterBy.q.out
+@@ -1 +1 @@
+-FAILED: ParseException line 5:0 missing EOF at 'union' near 'key'
++FAILED: ParseException line 6:0 missing EOF at 'union' near 'key'
+diff --git ql/src/test/results/clientnegative/unionDistributeBy.q.out ql/src/test/results/clientnegative/unionDistributeBy.q.out
+index 7f014137dc..1f0dddcf2c 100644
+--- ql/src/test/results/clientnegative/unionDistributeBy.q.out
++++ ql/src/test/results/clientnegative/unionDistributeBy.q.out
+@@ -1 +1 @@
+-FAILED: ParseException line 5:0 missing EOF at 'union' near 'key'
++FAILED: ParseException line 6:0 missing EOF at 'union' near 'key'
+diff --git ql/src/test/results/clientnegative/unionLimit.q.out ql/src/test/results/clientnegative/unionLimit.q.out
+index e8463b5288..61d91abe56 100644
+--- ql/src/test/results/clientnegative/unionLimit.q.out
++++ ql/src/test/results/clientnegative/unionLimit.q.out
+@@ -1 +1 @@
+-FAILED: ParseException line 5:0 missing EOF at 'union' near '1'
++FAILED: ParseException line 6:0 missing EOF at 'union' near '1'
+diff --git ql/src/test/results/clientnegative/unionOrderBy.q.out ql/src/test/results/clientnegative/unionOrderBy.q.out
+index 7f014137dc..1f0dddcf2c 100644
+--- ql/src/test/results/clientnegative/unionOrderBy.q.out
++++ ql/src/test/results/clientnegative/unionOrderBy.q.out
+@@ -1 +1 @@
+-FAILED: ParseException line 5:0 missing EOF at 'union' near 'key'
++FAILED: ParseException line 6:0 missing EOF at 'union' near 'key'
 diff --git ql/src/test/results/clientpositive/add_part_exist.q.out ql/src/test/results/clientpositive/add_part_exist.q.out
 index 78516643f8..e918ae23a9 100644
 --- ql/src/test/results/clientpositive/add_part_exist.q.out
