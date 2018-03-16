@@ -482,6 +482,26 @@ index 0000000000..5bd8c983b5
 +
 +analyze table src_cbo compute statistics;
 +analyze table src_cbo compute statistics for columns;
+diff --git data/files/datasets/src_hbase/load.hive.sql data/files/datasets/src_hbase/load.hive.sql
+new file mode 100644
+index 0000000000..5c7b5b7380
+--- /dev/null
++++ data/files/datasets/src_hbase/load.hive.sql
+@@ -0,0 +1,14 @@
++CREATE TABLE src_hbase_tmp (key STRING COMMENT 'default', value STRING COMMENT 'default') STORED AS TEXTFILE;
++
++LOAD DATA LOCAL INPATH "${hiveconf:test.data.dir}/kv1.txt" INTO TABLE src_hbase_tmp;
++
++ANALYZE TABLE src_hbase_tmp COMPUTE STATISTICS;
++
++ANALYZE TABLE src_hbase_tmp COMPUTE STATISTICS FOR COLUMNS key,value;
++
++CREATE TABLE src_hbase (key INT, value STRING)
++STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
++WITH SERDEPROPERTIES ('hbase.columns.mapping' = ':key,cf:val')
++TBLPROPERTIES ('hbase.table.name' = 'src_hbase');
++
++INSERT OVERWRITE TABLE src_hbase SELECT * FROM src_hbase_tmp
 diff --git data/files/datasets/src_json/load.hive.sql data/files/datasets/src_json/load.hive.sql
 new file mode 100644
 index 0000000000..13e0b96269
@@ -1381,8 +1401,40 @@ index fbca4241d4..c36d231704 100644
        List<String> outputs = new ArrayList<>(versionFiles.size());
        for (String versionFile : versionFiles) {
          // 1 for "_" after tname; 3 for ".qv" at the end. Version is in between.
+diff --git itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreHBaseCliDriver.java itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreHBaseCliDriver.java
+index 24bdc58cab..b40b8d7382 100644
+--- itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreHBaseCliDriver.java
++++ itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreHBaseCliDriver.java
+@@ -17,7 +17,6 @@
+  */
+ package org.apache.hadoop.hive.cli.control;
+ 
+-import static org.apache.hadoop.hive.cli.control.AbstractCliConfig.HIVE_ROOT;
+ import static org.junit.Assert.assertTrue;
+ import static org.junit.Assert.fail;
+ 
+diff --git itests/util/src/main/java/org/apache/hadoop/hive/hbase/HBaseQTestUtil.java itests/util/src/main/java/org/apache/hadoop/hive/hbase/HBaseQTestUtil.java
+index 1873bfe9b8..f0dd4149b7 100644
+--- itests/util/src/main/java/org/apache/hadoop/hive/hbase/HBaseQTestUtil.java
++++ itests/util/src/main/java/org/apache/hadoop/hive/hbase/HBaseQTestUtil.java
+@@ -68,14 +68,7 @@ public void createSources(String tname) throws Exception {
+ 
+     conf.setBoolean("hive.test.init.phase", true);
+ 
+-    // create and load the input data into the hbase table
+-    runCreateTableCmd(
+-      "CREATE TABLE " + HBASE_SRC_NAME + "(key INT, value STRING)"
+-        + "  STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'"
+-        + "  WITH SERDEPROPERTIES ('hbase.columns.mapping' = ':key,cf:val')"
+-        + "  TBLPROPERTIES ('hbase.table.name' = '" + HBASE_SRC_NAME + "')"
+-    );
+-    runCmd("INSERT OVERWRITE TABLE " + HBASE_SRC_NAME + " SELECT * FROM src");
++    initDataset(HBASE_SRC_NAME);
+ 
+     // create a snapshot
+     Admin admin = null;
 diff --git itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java
-index 82590ce853..d6fa738fe7 100644
+index 82590ce853..ba07513e59 100644
 --- itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java
 +++ itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java
 @@ -227,7 +227,7 @@ public static void addSrcTable(String table){
@@ -1414,6 +1466,15 @@ index 82590ce853..d6fa738fe7 100644
    }
  
    private CliDriver getCliDriver() {
+@@ -1190,7 +1184,7 @@ private void initDataSetForTest(File file){
+     }
+   }
+ 
+-  private void initDataset(String table) {
++  protected void initDataset(String table) {
+     if (getSrcTables().contains(table)){
+       return;
+     }
 diff --git itests/util/src/main/java/org/apache/hadoop/hive/ql/parse/CoreParseNegative.java itests/util/src/main/java/org/apache/hadoop/hive/ql/parse/CoreParseNegative.java
 index f087393d2b..a071689075 100644
 --- itests/util/src/main/java/org/apache/hadoop/hive/ql/parse/CoreParseNegative.java
