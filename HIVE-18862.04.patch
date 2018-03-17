@@ -26,11 +26,12 @@ index b72ec6ba2f..a6b09ab5b2 100644
  DROP TABLE states;
  DROP TABLE countries;
 diff --git accumulo-handler/src/test/queries/positive/accumulo_predicate_pushdown.q accumulo-handler/src/test/queries/positive/accumulo_predicate_pushdown.q
-index 0f064afd4a..e0725d761c 100644
+index 0f064afd4a..4cb93b58c2 100644
 --- accumulo-handler/src/test/queries/positive/accumulo_predicate_pushdown.q
 +++ accumulo-handler/src/test/queries/positive/accumulo_predicate_pushdown.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  CREATE TABLE accumulo_pushdown(key string, value string) 
  STORED BY 'org.apache.hadoop.hive.accumulo.AccumuloStorageHandler'
  WITH SERDEPROPERTIES ("accumulo.columns.mapping" = ":rowid,cf:string");
@@ -277,6 +278,15 @@ index 87aec5e586..08762aa355 100644
  add jar ${system:maven.local.repository}/org/apache/hive/hive-contrib/${system:hive.version}/hive-contrib-${system:hive.version}.jar;
  
  CREATE TEMPORARY FUNCTION udtfCount2 AS 'org.apache.hadoop.hive.contrib.udtf.example.GenericUDTFCount2';
+diff --git contrib/src/test/queries/clientpositive/url_hook.q contrib/src/test/queries/clientpositive/url_hook.q
+index 1d564080e6..512e579fb8 100644
+--- contrib/src/test/queries/clientpositive/url_hook.q
++++ contrib/src/test/queries/clientpositive/url_hook.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ add jar ${system:maven.local.repository}/org/apache/hive/hive-contrib/${system:hive.version}/hive-contrib-${system:hive.version}.jar;
+ SHOW TABLES 'src';
+ 
 diff --git data/files/datasets/alltypesorc/load.hive.sql data/files/datasets/alltypesorc/load.hive.sql
 new file mode 100644
 index 0000000000..87f9d5691a
@@ -1307,20 +1317,22 @@ index 2436c19fed..b7e2a3b354 100644
  drop table if exists hive1_tbl_data_hbase1;
  drop table if exists hive1_tbl_data_hbase2;
 diff --git hbase-handler/src/test/queries/positive/hbase_ppd_key_range.q hbase-handler/src/test/queries/positive/hbase_ppd_key_range.q
-index 59e724dceb..f60ad17291 100644
+index 59e724dceb..cf1d1d407d 100644
 --- hbase-handler/src/test/queries/positive/hbase_ppd_key_range.q
 +++ hbase-handler/src/test/queries/positive/hbase_ppd_key_range.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  CREATE TABLE hbase_pushdown(key string, value string) 
  STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
  WITH SERDEPROPERTIES ("hbase.columns.mapping" = ":key,cf:string");
 diff --git hbase-handler/src/test/queries/positive/hbase_pushdown.q hbase-handler/src/test/queries/positive/hbase_pushdown.q
-index 0d29c829d0..dd7a894f16 100644
+index 0d29c829d0..8e366aff46 100644
 --- hbase-handler/src/test/queries/positive/hbase_pushdown.q
 +++ hbase-handler/src/test/queries/positive/hbase_pushdown.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  CREATE TABLE hbase_pushdown(key int, value string) 
  STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
  WITH SERDEPROPERTIES ("hbase.columns.mapping" = ":key,cf:string");
@@ -1887,6 +1899,20 @@ index 866cec126f..e8f2c8d750 100644
 @@ -1 +1,2 @@
 +--! qt:dataset:src
  FROM (SELECT key, concat(value) AS key FROM src) a SELECT a.key;
+diff --git ql/src/test/queries/clientnegative/analyze.q ql/src/test/queries/clientnegative/analyze.q
+index 874f5bfc14..ee1d1b974e 100644
+--- ql/src/test/queries/clientnegative/analyze.q
++++ ql/src/test/queries/clientnegative/analyze.q
+@@ -1 +1,2 @@
++--! qt:dataset:srcpart
+ analyze table srcpart compute statistics;
+diff --git ql/src/test/queries/clientnegative/analyze1.q ql/src/test/queries/clientnegative/analyze1.q
+index 057a1a0b48..97863f92c3 100644
+--- ql/src/test/queries/clientnegative/analyze1.q
++++ ql/src/test/queries/clientnegative/analyze1.q
+@@ -1 +1,2 @@
++--! qt:dataset:srcpart
+ analyze table srcpart partition (key) compute statistics;
 diff --git ql/src/test/queries/clientnegative/analyze_view.q ql/src/test/queries/clientnegative/analyze_view.q
 index af4970f52e..37a3709a71 100644
 --- ql/src/test/queries/clientnegative/analyze_view.q
@@ -1914,6 +1940,33 @@ index ff8dcb2485..d8796757b9 100644
  set hive.archive.enabled = true;
  -- Tests trying to unarchive a non-archived partition
  -- EXCLUDE_HADOOP_MAJOR_VERSIONS(0.17, 0.18, 0.19)
+diff --git ql/src/test/queries/clientnegative/archive3.q ql/src/test/queries/clientnegative/archive3.q
+index 53057daa1b..c09243fdfd 100644
+--- ql/src/test/queries/clientnegative/archive3.q
++++ ql/src/test/queries/clientnegative/archive3.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:srcpart
+ set hive.archive.enabled = true;
+ -- Tests archiving a table
+ -- EXCLUDE_HADOOP_MAJOR_VERSIONS(0.17, 0.18, 0.19)
+diff --git ql/src/test/queries/clientnegative/archive4.q ql/src/test/queries/clientnegative/archive4.q
+index 56d6f1798d..befdc5fccf 100644
+--- ql/src/test/queries/clientnegative/archive4.q
++++ ql/src/test/queries/clientnegative/archive4.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:srcpart
+ set hive.archive.enabled = true;
+ -- Tests archiving multiple partitions
+ -- EXCLUDE_HADOOP_MAJOR_VERSIONS(0.17, 0.18, 0.19)
+diff --git ql/src/test/queries/clientnegative/archive5.q ql/src/test/queries/clientnegative/archive5.q
+index 4f6dc8d72c..1e67dc9534 100644
+--- ql/src/test/queries/clientnegative/archive5.q
++++ ql/src/test/queries/clientnegative/archive5.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:srcpart
+ set hive.archive.enabled = true;
+ -- Tests creating a partition where the partition value will collide with the
+ -- a intermediate directory
 diff --git ql/src/test/queries/clientnegative/archive_corrupt.q ql/src/test/queries/clientnegative/archive_corrupt.q
 index ed496881bb..ab182d74a2 100644
 --- ql/src/test/queries/clientnegative/archive_corrupt.q
@@ -2335,6 +2388,14 @@ index cccc8ad54e..bdeebcff0f 100644
  drop table tstsrc;
  create table tstsrc like src;
  insert overwrite table tstsrc
+diff --git ql/src/test/queries/clientnegative/column_rename3.q ql/src/test/queries/clientnegative/column_rename3.q
+index 91c9537a99..9a7634c558 100644
+--- ql/src/test/queries/clientnegative/column_rename3.q
++++ ql/src/test/queries/clientnegative/column_rename3.q
+@@ -1 +1,2 @@
++--! qt:dataset:src
+ alter table src change key key;
+\ No newline at end of file
 diff --git ql/src/test/queries/clientnegative/column_rename4.q ql/src/test/queries/clientnegative/column_rename4.q
 index dd89a5a10b..4ec8e0fcea 100644
 --- ql/src/test/queries/clientnegative/column_rename4.q
@@ -2629,6 +2690,15 @@ index f28b610466..57e58969d9 100644
 +--! qt:dataset:srcpart
  DESC srcpart;
  DESC srcpart PARTITION(ds='2012-04-08', hr='15');
+diff --git ql/src/test/queries/clientnegative/desc_failure3.q ql/src/test/queries/clientnegative/desc_failure3.q
+index bee0ea5788..3ec6965028 100644
+--- ql/src/test/queries/clientnegative/desc_failure3.q
++++ ql/src/test/queries/clientnegative/desc_failure3.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ CREATE DATABASE db1;
+ CREATE TABLE db1.t1(key1 INT, value1 STRING) PARTITIONED BY (ds STRING, part STRING);
+ 
 diff --git ql/src/test/queries/clientnegative/describe_xpath1.q ql/src/test/queries/clientnegative/describe_xpath1.q
 index 84a848e895..4787f5bd96 100644
 --- ql/src/test/queries/clientnegative/describe_xpath1.q
@@ -2791,11 +2861,12 @@ index 5d37c743ba..28fce6ff8a 100644
  
  set hive.mapred.mode=nonstrict;
 diff --git ql/src/test/queries/clientnegative/exchange_partition.q ql/src/test/queries/clientnegative/exchange_partition.q
-index 7dc4f57598..b12b0c0935 100644
+index 7dc4f57598..440c8b7ace 100644
 --- ql/src/test/queries/clientnegative/exchange_partition.q
 +++ ql/src/test/queries/clientnegative/exchange_partition.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  dfs ${system:test.dfs.mkdir} ${system:test.tmp.dir}/ex_table1;
  dfs ${system:test.dfs.mkdir} ${system:test.tmp.dir}/ex_table1/part=part1;
  CREATE EXTERNAL TABLE ex_table1 ( key INT, value STRING)
@@ -2953,6 +3024,15 @@ index 71f4fd13a0..ced3158358 100644
 +--! qt:dataset:src
  EXPLAIN SELECT * FROM src HAVING key > 300;
  SELECT * FROM src HAVING key > 300;
+diff --git ql/src/test/queries/clientnegative/illegal_partition_type.q ql/src/test/queries/clientnegative/illegal_partition_type.q
+index 1ab828c8be..08c248d51c 100644
+--- ql/src/test/queries/clientnegative/illegal_partition_type.q
++++ ql/src/test/queries/clientnegative/illegal_partition_type.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ -- begin part(string, int) pass(string, string)
+ CREATE TABLE tab1 (id1 int,id2 string) PARTITIONED BY(month string,day int) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ;
+ LOAD DATA LOCAL INPATH '../../data/files/T1.txt' overwrite into table tab1 PARTITION(month='June', day='second');
 diff --git ql/src/test/queries/clientnegative/input1.q ql/src/test/queries/clientnegative/input1.q
 index 92a6791acb..485e24e0e8 100644
 --- ql/src/test/queries/clientnegative/input1.q
@@ -3103,6 +3183,13 @@ index 01fdb87ff7..9743fee721 100644
  set hive.strict.checks.bucketing=false;
  
  set hive.exec.dynamic.partition=true;
+diff --git ql/src/test/queries/clientnegative/insertsel_fail.q ql/src/test/queries/clientnegative/insertsel_fail.q
+index c14fefd565..b5d8ecf658 100644
+--- ql/src/test/queries/clientnegative/insertsel_fail.q
++++ ql/src/test/queries/clientnegative/insertsel_fail.q
+@@ -1 +1,2 @@
++--! qt:dataset:src
+ insert overwrite directory 'target/warehouse/aret.out' select a.key src a;
 diff --git ql/src/test/queries/clientnegative/interval_1.q ql/src/test/queries/clientnegative/interval_1.q
 index 0db864d3e0..6da3ad25fb 100644
 --- ql/src/test/queries/clientnegative/interval_1.q
@@ -3650,6 +3737,15 @@ index d9378d263c..abe0bac6a7 100644
  -- testHavingLeadWithNoGBYNoWindowing
  select  p_mfgr,p_name, p_size 
  from part 
+diff --git ql/src/test/queries/clientnegative/ptf_negative_HavingLeadWithPTF.q ql/src/test/queries/clientnegative/ptf_negative_HavingLeadWithPTF.q
+index 93f72dc05f..7f32401808 100644
+--- ql/src/test/queries/clientnegative/ptf_negative_HavingLeadWithPTF.q
++++ ql/src/test/queries/clientnegative/ptf_negative_HavingLeadWithPTF.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ -- testHavingLeadWithPTF
+ select  p_mfgr,p_name, p_size 
+ from noop(on part 
 diff --git ql/src/test/queries/clientnegative/ptf_negative_InvalidValueBoundary.q ql/src/test/queries/clientnegative/ptf_negative_InvalidValueBoundary.q
 index 91be988877..5443554253 100644
 --- ql/src/test/queries/clientnegative/ptf_negative_InvalidValueBoundary.q
@@ -3911,6 +4007,14 @@ index ad14c0c6ac..cd7afd52db 100644
  -- should fail: hive.fetch.task.conversion accepts none, minimal or more
  desc src;
  
+diff --git ql/src/test/queries/clientnegative/show_tablestatus_not_existing_part.q ql/src/test/queries/clientnegative/show_tablestatus_not_existing_part.q
+index 242e165285..92fd1f188c 100644
+--- ql/src/test/queries/clientnegative/show_tablestatus_not_existing_part.q
++++ ql/src/test/queries/clientnegative/show_tablestatus_not_existing_part.q
+@@ -1 +1,2 @@
++--! qt:dataset:srcpart
+ SHOW TABLE EXTENDED LIKE `srcpart` PARTITION(ds='2008-14-08', hr=11);
+\ No newline at end of file
 diff --git ql/src/test/queries/clientnegative/smb_bucketmapjoin.q ql/src/test/queries/clientnegative/smb_bucketmapjoin.q
 index 1cd7066320..8948b4a26e 100644
 --- ql/src/test/queries/clientnegative/smb_bucketmapjoin.q
@@ -4021,19 +4125,21 @@ index 652afe7c5b..2fa0d016b8 100644
  -- If stats need not be reliable, the statement succeeds. However, if stats are supposed
  -- to be reliable (by setting hive.stats.reliable to true), the insert statement fails
 diff --git ql/src/test/queries/clientnegative/strict_join.q ql/src/test/queries/clientnegative/strict_join.q
-index 66b5963191..7109d55b33 100644
+index 66b5963191..14cdfb33d7 100644
 --- ql/src/test/queries/clientnegative/strict_join.q
 +++ ql/src/test/queries/clientnegative/strict_join.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.strict.checks.bucketing=false; 
  
  set hive.mapred.mode=strict;
 diff --git ql/src/test/queries/clientnegative/strict_join_2.q ql/src/test/queries/clientnegative/strict_join_2.q
-index dc5f87b733..9ac787d9f1 100644
+index dc5f87b733..a9dd1a1082 100644
 --- ql/src/test/queries/clientnegative/strict_join_2.q
 +++ ql/src/test/queries/clientnegative/strict_join_2.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.strict.checks.bucketing=false; 
  
@@ -4075,10 +4181,11 @@ index 718566d4c9..3a11218cfb 100644
  set hive.strict.checks.no.partition.filter=true;
  
 diff --git ql/src/test/queries/clientnegative/subq_insert.q ql/src/test/queries/clientnegative/subq_insert.q
-index 0bc9e24e48..472bbb6a39 100644
+index 0bc9e24e48..1725e791b0 100644
 --- ql/src/test/queries/clientnegative/subq_insert.q
 +++ ql/src/test/queries/clientnegative/subq_insert.q
-@@ -1,2 +1,3 @@
+@@ -1,2 +1,4 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  EXPLAIN
  SELECT * FROM (INSERT OVERWRITE TABLE src1 SELECT * FROM src ) y;
@@ -4243,6 +4350,20 @@ index ac15310181..86cad1e333 100644
  -- corr and windowing 
  select p_mfgr, p_name, p_size 
  from part a 
+diff --git ql/src/test/queries/clientnegative/touch1.q ql/src/test/queries/clientnegative/touch1.q
+index 9efbba0082..8cc2b91363 100644
+--- ql/src/test/queries/clientnegative/touch1.q
++++ ql/src/test/queries/clientnegative/touch1.q
+@@ -1 +1,2 @@
++--! qt:dataset:srcpart
+ ALTER TABLE srcpart TOUCH PARTITION (ds='2008-04-08', hr='13');
+diff --git ql/src/test/queries/clientnegative/touch2.q ql/src/test/queries/clientnegative/touch2.q
+index 923a171e04..c96ba4274c 100644
+--- ql/src/test/queries/clientnegative/touch2.q
++++ ql/src/test/queries/clientnegative/touch2.q
+@@ -1 +1,2 @@
++--! qt:dataset:src
+ ALTER TABLE src TOUCH PARTITION (ds='2008-04-08', hr='12');
 diff --git ql/src/test/queries/clientnegative/truncate_bucketed_column.q ql/src/test/queries/clientnegative/truncate_bucketed_column.q
 index e53665695a..955802e46a 100644
 --- ql/src/test/queries/clientnegative/truncate_bucketed_column.q
@@ -4280,23 +4401,41 @@ index 5509552811..08d07e5f2c 100644
  
  CREATE TABLE test_tab (key STRING, value STRING) STORED AS RCFILE;
 diff --git ql/src/test/queries/clientnegative/truncate_partition_column.q ql/src/test/queries/clientnegative/truncate_partition_column.q
-index 134743ac13..fa90077968 100644
+index 134743ac13..40b8735456 100644
 --- ql/src/test/queries/clientnegative/truncate_partition_column.q
 +++ ql/src/test/queries/clientnegative/truncate_partition_column.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  -- Tests truncating a partition column
  
  CREATE TABLE test_tab (key STRING, value STRING) PARTITIONED BY (part STRING) STORED AS RCFILE;
 diff --git ql/src/test/queries/clientnegative/truncate_partition_column2.q ql/src/test/queries/clientnegative/truncate_partition_column2.q
-index 47635208a7..4050f9c068 100644
+index 47635208a7..e90db9b787 100644
 --- ql/src/test/queries/clientnegative/truncate_partition_column2.q
 +++ ql/src/test/queries/clientnegative/truncate_partition_column2.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  -- Tests truncating a partition column
  
  CREATE TABLE test_tab (key STRING, value STRING) PARTITIONED BY (part STRING) STORED AS RCFILE;
+diff --git ql/src/test/queries/clientnegative/truncate_table_failure1.q ql/src/test/queries/clientnegative/truncate_table_failure1.q
+index f6cfa44bbb..ac59138a54 100644
+--- ql/src/test/queries/clientnegative/truncate_table_failure1.q
++++ ql/src/test/queries/clientnegative/truncate_table_failure1.q
+@@ -1,2 +1,3 @@
++--! qt:dataset:src
+ -- partition spec for non-partitioned table
+ TRUNCATE TABLE src partition (ds='2008-04-08', hr='11');
+diff --git ql/src/test/queries/clientnegative/truncate_table_failure2.q ql/src/test/queries/clientnegative/truncate_table_failure2.q
+index 1137d893eb..2959b1d46b 100644
+--- ql/src/test/queries/clientnegative/truncate_table_failure2.q
++++ ql/src/test/queries/clientnegative/truncate_table_failure2.q
+@@ -1,2 +1,3 @@
++--! qt:dataset:srcpart
+ -- full partition spec for not existing partition
+ TRUNCATE TABLE srcpart partition (ds='2012-12-17', hr='15');
 diff --git ql/src/test/queries/clientnegative/udaf_collect_set_unsupported.q ql/src/test/queries/clientnegative/udaf_collect_set_unsupported.q
 index ed03620a67..9ba443ec9b 100644
 --- ql/src/test/queries/clientnegative/udaf_collect_set_unsupported.q
@@ -5023,6 +5162,15 @@ index 93ed7877aa..9403368396 100644
  set hive.mapred.mode=nonstrict;
  -- HIVE-5122 locations for 2nd, 3rd... partition are ignored
  
+diff --git ql/src/test/queries/clientpositive/add_partition_with_whitelist.q ql/src/test/queries/clientpositive/add_partition_with_whitelist.q
+index 009c7610ef..ab06484b9a 100644
+--- ql/src/test/queries/clientpositive/add_partition_with_whitelist.q
++++ ql/src/test/queries/clientpositive/add_partition_with_whitelist.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ SET hive.metastore.partition.name.whitelist.pattern=[A-Za-z]*;
+ -- This pattern matches only letters.
+ 
 diff --git ql/src/test/queries/clientpositive/alias_casted_column.q ql/src/test/queries/clientpositive/alias_casted_column.q
 index f1fc91a5f2..c6a6a09824 100644
 --- ql/src/test/queries/clientpositive/alias_casted_column.q
@@ -5195,6 +5343,15 @@ index f8bf2a234a..434cff58c7 100644
  create table src_stat_part_one(key string, value string) partitioned by (partitionId int);
  
  insert overwrite table src_stat_part_one partition (partitionId=1)
+diff --git ql/src/test/queries/clientpositive/alter_partition_with_whitelist.q ql/src/test/queries/clientpositive/alter_partition_with_whitelist.q
+index 301362a881..354750368f 100644
+--- ql/src/test/queries/clientpositive/alter_partition_with_whitelist.q
++++ ql/src/test/queries/clientpositive/alter_partition_with_whitelist.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ SET hive.metastore.partition.name.whitelist.pattern=[A-Za-z]*;
+ -- This pattern matches only letters.
+ 
 diff --git ql/src/test/queries/clientpositive/alter_rename_partition.q ql/src/test/queries/clientpositive/alter_rename_partition.q
 index 8ebbe98824..b6f6ccce3b 100644
 --- ql/src/test/queries/clientpositive/alter_rename_partition.q
@@ -5225,21 +5382,23 @@ index 70f2bb4cfc..5ffcaf0bf0 100644
  -- SORT_BEFORE_DIFF
  
 diff --git ql/src/test/queries/clientpositive/alter_rename_table.q ql/src/test/queries/clientpositive/alter_rename_table.q
-index 2061850540..646755bf2a 100644
+index 2061850540..53fb230cf6 100644
 --- ql/src/test/queries/clientpositive/alter_rename_table.q
 +++ ql/src/test/queries/clientpositive/alter_rename_table.q
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,6 @@
 +--! qt:dataset:srcpart
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  create database source;
  create database target;
 diff --git ql/src/test/queries/clientpositive/alter_table_column_stats.q ql/src/test/queries/clientpositive/alter_table_column_stats.q
-index 8892d3f2af..b24ef968ef 100644
+index 8892d3f2af..9bb9ed74df 100644
 --- ql/src/test/queries/clientpositive/alter_table_column_stats.q
 +++ ql/src/test/queries/clientpositive/alter_table_column_stats.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  
  set hive.metastore.try.direct.sql=true;
@@ -5318,11 +5477,12 @@ index 2334bc6535..80b2fb4a71 100644
  SELECT * FROM SRC x where x.key = 20 CLUSTER BY (key,value) ;
  
 diff --git ql/src/test/queries/clientpositive/ambiguous_col.q ql/src/test/queries/clientpositive/ambiguous_col.q
-index d1cebeb506..f7d9f8aac1 100644
+index d1cebeb506..0854718d94 100644
 --- ql/src/test/queries/clientpositive/ambiguous_col.q
 +++ ql/src/test/queries/clientpositive/ambiguous_col.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src1
++--! qt:dataset:src
  set hive.support.quoted.identifiers=none;
  -- TOK_ALLCOLREF
  explain select * from (select a.key, a.* from (select * from src) a join (select * from src1) b on (a.key = b.key)) t;
@@ -5576,6 +5736,24 @@ index 9780a75709..8bd0b2c4c8 100644
  set hive.stats.column.autogather=true;
  set hive.mapred.mode=nonstrict;
  set hive.support.concurrency=true;
+diff --git ql/src/test/queries/clientpositive/autoColumnStats_5.q ql/src/test/queries/clientpositive/autoColumnStats_5.q
+index d59099cd11..3da7b3810c 100644
+--- ql/src/test/queries/clientpositive/autoColumnStats_5.q
++++ ql/src/test/queries/clientpositive/autoColumnStats_5.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.stats.column.autogather=true;
+ set hive.mapred.mode=nonstrict;
+ set hive.cli.print.header=true;
+diff --git ql/src/test/queries/clientpositive/autoColumnStats_5a.q ql/src/test/queries/clientpositive/autoColumnStats_5a.q
+index a8bce18e92..0d94344527 100644
+--- ql/src/test/queries/clientpositive/autoColumnStats_5a.q
++++ ql/src/test/queries/clientpositive/autoColumnStats_5a.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.stats.column.autogather=true;
+ set hive.mapred.mode=nonstrict;
+ set hive.cli.print.header=true;
 diff --git ql/src/test/queries/clientpositive/autoColumnStats_6.q ql/src/test/queries/clientpositive/autoColumnStats_6.q
 index 45e5daa3eb..315286b749 100644
 --- ql/src/test/queries/clientpositive/autoColumnStats_6.q
@@ -5643,28 +5821,31 @@ index dad21c5fda..80ba6fff3f 100644
  set hive.auto.convert.join = true;
  
 diff --git ql/src/test/queries/clientpositive/auto_join11.q ql/src/test/queries/clientpositive/auto_join11.q
-index c56df2d6d5..40dbf402b2 100644
+index c56df2d6d5..3a577a8b4a 100644
 --- ql/src/test/queries/clientpositive/auto_join11.q
 +++ ql/src/test/queries/clientpositive/auto_join11.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  set hive.auto.convert.join = true;
  
 diff --git ql/src/test/queries/clientpositive/auto_join12.q ql/src/test/queries/clientpositive/auto_join12.q
-index 55cd6e9555..ace0c62069 100644
+index 55cd6e9555..0f40202684 100644
 --- ql/src/test/queries/clientpositive/auto_join12.q
 +++ ql/src/test/queries/clientpositive/auto_join12.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  
  
 diff --git ql/src/test/queries/clientpositive/auto_join13.q ql/src/test/queries/clientpositive/auto_join13.q
-index ecf4c3b524..e61cd36823 100644
+index ecf4c3b524..8d97258619 100644
 --- ql/src/test/queries/clientpositive/auto_join13.q
 +++ ql/src/test/queries/clientpositive/auto_join13.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  
@@ -5781,28 +5962,31 @@ index e619584142..d97fb004b2 100644
  
  explain
 diff --git ql/src/test/queries/clientpositive/auto_join21.q ql/src/test/queries/clientpositive/auto_join21.q
-index 10ac4901c8..fbb0659d7d 100644
+index 10ac4901c8..0418753d09 100644
 --- ql/src/test/queries/clientpositive/auto_join21.q
 +++ ql/src/test/queries/clientpositive/auto_join21.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.explain.user=false;
  set hive.auto.convert.join = true;
  
 diff --git ql/src/test/queries/clientpositive/auto_join22.q ql/src/test/queries/clientpositive/auto_join22.q
-index ffe9e95d5a..5b0d58f67e 100644
+index ffe9e95d5a..a1fda8530d 100644
 --- ql/src/test/queries/clientpositive/auto_join22.q
 +++ ql/src/test/queries/clientpositive/auto_join22.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  set hive.auto.convert.join = true;
  explain
 diff --git ql/src/test/queries/clientpositive/auto_join23.q ql/src/test/queries/clientpositive/auto_join23.q
-index 4314f73575..833afeb821 100644
+index 4314f73575..91cf3cd64c 100644
 --- ql/src/test/queries/clientpositive/auto_join23.q
 +++ ql/src/test/queries/clientpositive/auto_join23.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  set hive.auto.convert.join = true;
@@ -5847,19 +6031,21 @@ index f3c5004060..9669450e30 100644
  set hive.auto.convert.join = true;
  
 diff --git ql/src/test/queries/clientpositive/auto_join28.q ql/src/test/queries/clientpositive/auto_join28.q
-index 61b9d84291..2be9a60175 100644
+index 61b9d84291..57f89bdb48 100644
 --- ql/src/test/queries/clientpositive/auto_join28.q
 +++ ql/src/test/queries/clientpositive/auto_join28.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.mapjoin.smalltable.filesize = 1;
  
  set hive.auto.convert.join = true;
 diff --git ql/src/test/queries/clientpositive/auto_join29.q ql/src/test/queries/clientpositive/auto_join29.q
-index f991540e64..538542c42d 100644
+index f991540e64..4a1eda146c 100644
 --- ql/src/test/queries/clientpositive/auto_join29.q
 +++ ql/src/test/queries/clientpositive/auto_join29.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.explain.user=false;
  set hive.auto.convert.join = true;
@@ -5992,15 +6178,25 @@ index 6438908a08..ba3eeae4f7 100644
  set hive.exec.post.hooks=org.apache.hadoop.hive.ql.hooks.PostExecutePrinter,org.apache.hadoop.hive.ql.hooks.PrintCompletedTasksHook;
  set hive.auto.convert.join=true;
 diff --git ql/src/test/queries/clientpositive/auto_smb_mapjoin_14.q ql/src/test/queries/clientpositive/auto_smb_mapjoin_14.q
-index 666ae7580d..151e9d1865 100644
+index 666ae7580d..f6eb5c5a81 100644
 --- ql/src/test/queries/clientpositive/auto_smb_mapjoin_14.q
 +++ ql/src/test/queries/clientpositive/auto_smb_mapjoin_14.q
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,6 @@
 +--! qt:dataset:src1
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  ;
  
+diff --git ql/src/test/queries/clientpositive/auto_sortmerge_join_1.q ql/src/test/queries/clientpositive/auto_sortmerge_join_1.q
+index 845d36939e..6949f8cece 100644
+--- ql/src/test/queries/clientpositive/auto_sortmerge_join_1.q
++++ ql/src/test/queries/clientpositive/auto_sortmerge_join_1.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.mapred.mode=nonstrict;
 diff --git ql/src/test/queries/clientpositive/auto_sortmerge_join_10.q ql/src/test/queries/clientpositive/auto_sortmerge_join_10.q
 index abd3a34416..1cbda1f41f 100644
 --- ql/src/test/queries/clientpositive/auto_sortmerge_join_10.q
@@ -6010,6 +6206,24 @@ index abd3a34416..1cbda1f41f 100644
  set hive.mapred.mode=nonstrict;
  set hive.explain.user=false;
  ;
+diff --git ql/src/test/queries/clientpositive/auto_sortmerge_join_11.q ql/src/test/queries/clientpositive/auto_sortmerge_join_11.q
+index d9066a44c3..f95d36cda9 100644
+--- ql/src/test/queries/clientpositive/auto_sortmerge_join_11.q
++++ ql/src/test/queries/clientpositive/auto_sortmerge_join_11.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/auto_sortmerge_join_12.q ql/src/test/queries/clientpositive/auto_sortmerge_join_12.q
+index 0864188740..86ba6cfe29 100644
+--- ql/src/test/queries/clientpositive/auto_sortmerge_join_12.q
++++ ql/src/test/queries/clientpositive/auto_sortmerge_join_12.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.mapred.mode=nonstrict;
 diff --git ql/src/test/queries/clientpositive/auto_sortmerge_join_13.q ql/src/test/queries/clientpositive/auto_sortmerge_join_13.q
 index 32b57ab006..44d3452d77 100644
 --- ql/src/test/queries/clientpositive/auto_sortmerge_join_13.q
@@ -6037,6 +6251,42 @@ index 84a8ed76c4..4a2a2eab81 100644
  set hive.mapred.mode=nonstrict;
  set hive.explain.user=false;
  ;
+diff --git ql/src/test/queries/clientpositive/auto_sortmerge_join_2.q ql/src/test/queries/clientpositive/auto_sortmerge_join_2.q
+index e5fdcb57e4..0413b51ef4 100644
+--- ql/src/test/queries/clientpositive/auto_sortmerge_join_2.q
++++ ql/src/test/queries/clientpositive/auto_sortmerge_join_2.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/auto_sortmerge_join_3.q ql/src/test/queries/clientpositive/auto_sortmerge_join_3.q
+index 673a460243..7062b82f7b 100644
+--- ql/src/test/queries/clientpositive/auto_sortmerge_join_3.q
++++ ql/src/test/queries/clientpositive/auto_sortmerge_join_3.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/auto_sortmerge_join_4.q ql/src/test/queries/clientpositive/auto_sortmerge_join_4.q
+index abf09e5534..1a23fca585 100644
+--- ql/src/test/queries/clientpositive/auto_sortmerge_join_4.q
++++ ql/src/test/queries/clientpositive/auto_sortmerge_join_4.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/auto_sortmerge_join_5.q ql/src/test/queries/clientpositive/auto_sortmerge_join_5.q
+index b163498814..50303cf2e0 100644
+--- ql/src/test/queries/clientpositive/auto_sortmerge_join_5.q
++++ ql/src/test/queries/clientpositive/auto_sortmerge_join_5.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.mapred.mode=nonstrict;
 diff --git ql/src/test/queries/clientpositive/auto_sortmerge_join_6.q ql/src/test/queries/clientpositive/auto_sortmerge_join_6.q
 index 25eeee33e3..32745c90e3 100644
 --- ql/src/test/queries/clientpositive/auto_sortmerge_join_6.q
@@ -6046,13 +6296,32 @@ index 25eeee33e3..32745c90e3 100644
  set hive.mapred.mode=nonstrict;
  ;
  
+diff --git ql/src/test/queries/clientpositive/auto_sortmerge_join_7.q ql/src/test/queries/clientpositive/auto_sortmerge_join_7.q
+index bd780861e3..96f425086f 100644
+--- ql/src/test/queries/clientpositive/auto_sortmerge_join_7.q
++++ ql/src/test/queries/clientpositive/auto_sortmerge_join_7.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/auto_sortmerge_join_8.q ql/src/test/queries/clientpositive/auto_sortmerge_join_8.q
+index d09f83be0f..6783d354d9 100644
+--- ql/src/test/queries/clientpositive/auto_sortmerge_join_8.q
++++ ql/src/test/queries/clientpositive/auto_sortmerge_join_8.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.mapred.mode=nonstrict;
 diff --git ql/src/test/queries/clientpositive/auto_sortmerge_join_9.q ql/src/test/queries/clientpositive/auto_sortmerge_join_9.q
-index 1abdc2cae8..ec36f5021f 100644
+index 1abdc2cae8..b342dea1d5 100644
 --- ql/src/test/queries/clientpositive/auto_sortmerge_join_9.q
 +++ ql/src/test/queries/clientpositive/auto_sortmerge_join_9.q
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,6 @@
 +--! qt:dataset:src1
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  set hive.explain.user=false;
  ;
@@ -6064,6 +6333,15 @@ index 5bbd433e00..2030c2a2a6 100644
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  CREATE TEMPORARY FUNCTION test_max AS 'org.apache.hadoop.hive.ql.udf.UDAFTestMax';
+ 
+diff --git ql/src/test/queries/clientpositive/avro_add_column3.q ql/src/test/queries/clientpositive/avro_add_column3.q
+index 2d9cb6f3f9..939cb4fe4b 100644
+--- ql/src/test/queries/clientpositive/avro_add_column3.q
++++ ql/src/test/queries/clientpositive/avro_add_column3.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.mapred.mode=nonstrict;
+ -- SORT_QUERY_RESULTS
  
 diff --git ql/src/test/queries/clientpositive/avro_compression_enabled.q ql/src/test/queries/clientpositive/avro_compression_enabled.q
 index 58867ff50f..e0fa2b6356 100644
@@ -6173,6 +6451,15 @@ index 1f5c98a239..71a4b22290 100644
  drop table ba_test;
  
  -- Everything in ba_table1.q + columnar serde in RCFILE.
+diff --git ql/src/test/queries/clientpositive/bitvector.q ql/src/test/queries/clientpositive/bitvector.q
+index d8669f254b..975db29cc7 100644
+--- ql/src/test/queries/clientpositive/bitvector.q
++++ ql/src/test/queries/clientpositive/bitvector.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ set hive.mapred.mode=nonstrict;
+ 
+ desc formatted src key;
 diff --git ql/src/test/queries/clientpositive/bucket1.q ql/src/test/queries/clientpositive/bucket1.q
 index 6a59465fb9..beb4a8105f 100644
 --- ql/src/test/queries/clientpositive/bucket1.q
@@ -6281,12 +6568,112 @@ index 2533ae8c7e..2c4e69770c 100644
  set hive.exec.mode.local.auto=false;
  set hive.exec.reducers.max = 2;
  
+diff --git ql/src/test/queries/clientpositive/bucketcontext_1.q ql/src/test/queries/clientpositive/bucketcontext_1.q
+index 876bc0f30e..cf5fa6ccf5 100644
+--- ql/src/test/queries/clientpositive/bucketcontext_1.q
++++ ql/src/test/queries/clientpositive/bucketcontext_1.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/bucketcontext_2.q ql/src/test/queries/clientpositive/bucketcontext_2.q
+index 53518c4379..a53105c504 100644
+--- ql/src/test/queries/clientpositive/bucketcontext_2.q
++++ ql/src/test/queries/clientpositive/bucketcontext_2.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/bucketcontext_3.q ql/src/test/queries/clientpositive/bucketcontext_3.q
+index 5eadd1d2a3..b77173a252 100644
+--- ql/src/test/queries/clientpositive/bucketcontext_3.q
++++ ql/src/test/queries/clientpositive/bucketcontext_3.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/bucketcontext_4.q ql/src/test/queries/clientpositive/bucketcontext_4.q
+index f5e0150014..b3113725f0 100644
+--- ql/src/test/queries/clientpositive/bucketcontext_4.q
++++ ql/src/test/queries/clientpositive/bucketcontext_4.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/bucketcontext_5.q ql/src/test/queries/clientpositive/bucketcontext_5.q
+index 85acdd9984..332d533682 100644
+--- ql/src/test/queries/clientpositive/bucketcontext_5.q
++++ ql/src/test/queries/clientpositive/bucketcontext_5.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ -- small no part, 4 bucket & big no part, 2 bucket
+diff --git ql/src/test/queries/clientpositive/bucketcontext_6.q ql/src/test/queries/clientpositive/bucketcontext_6.q
+index d7ab5e38c1..0b608ec2a4 100644
+--- ql/src/test/queries/clientpositive/bucketcontext_6.q
++++ ql/src/test/queries/clientpositive/bucketcontext_6.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/bucketcontext_7.q ql/src/test/queries/clientpositive/bucketcontext_7.q
+index 2682c7da10..32245a5352 100644
+--- ql/src/test/queries/clientpositive/bucketcontext_7.q
++++ ql/src/test/queries/clientpositive/bucketcontext_7.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/bucketcontext_8.q ql/src/test/queries/clientpositive/bucketcontext_8.q
+index 60be0001fc..252f74eb38 100644
+--- ql/src/test/queries/clientpositive/bucketcontext_8.q
++++ ql/src/test/queries/clientpositive/bucketcontext_8.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/bucketmapjoin10.q ql/src/test/queries/clientpositive/bucketmapjoin10.q
+index 4196d2b791..a0051b5318 100644
+--- ql/src/test/queries/clientpositive/bucketmapjoin10.q
++++ ql/src/test/queries/clientpositive/bucketmapjoin10.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
+diff --git ql/src/test/queries/clientpositive/bucketmapjoin11.q ql/src/test/queries/clientpositive/bucketmapjoin11.q
+index a4396dba70..633e388453 100644
+--- ql/src/test/queries/clientpositive/bucketmapjoin11.q
++++ ql/src/test/queries/clientpositive/bucketmapjoin11.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
+diff --git ql/src/test/queries/clientpositive/bucketmapjoin12.q ql/src/test/queries/clientpositive/bucketmapjoin12.q
+index e9d6760279..2615f3e43c 100644
+--- ql/src/test/queries/clientpositive/bucketmapjoin12.q
++++ ql/src/test/queries/clientpositive/bucketmapjoin12.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
 diff --git ql/src/test/queries/clientpositive/bucketmapjoin13.q ql/src/test/queries/clientpositive/bucketmapjoin13.q
-index 456d155b19..b86ec6ab8c 100644
+index 456d155b19..db437b8e14 100644
 --- ql/src/test/queries/clientpositive/bucketmapjoin13.q
 +++ ql/src/test/queries/clientpositive/bucketmapjoin13.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  set hive.exec.reducers.max=1;
  
@@ -6299,6 +6686,24 @@ index 9da0619f0c..29ced26c32 100644
  set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
  
  -- SORT_QUERY_RESULTS
+diff --git ql/src/test/queries/clientpositive/bucketmapjoin8.q ql/src/test/queries/clientpositive/bucketmapjoin8.q
+index 7dc096186e..4be81c5f53 100644
+--- ql/src/test/queries/clientpositive/bucketmapjoin8.q
++++ ql/src/test/queries/clientpositive/bucketmapjoin8.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
+diff --git ql/src/test/queries/clientpositive/bucketmapjoin9.q ql/src/test/queries/clientpositive/bucketmapjoin9.q
+index 57d0bf20fc..c9539f5b5a 100644
+--- ql/src/test/queries/clientpositive/bucketmapjoin9.q
++++ ql/src/test/queries/clientpositive/bucketmapjoin9.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.strict.checks.bucketing=false;
+ 
+ set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
 diff --git ql/src/test/queries/clientpositive/bucketsortoptimize_insert_1.q ql/src/test/queries/clientpositive/bucketsortoptimize_insert_1.q
 index 8f8d625a45..5c04de5a04 100644
 --- ql/src/test/queries/clientpositive/bucketsortoptimize_insert_1.q
@@ -6501,12 +6906,13 @@ index e64fd415c9..5929ad7706 100644
  set hive.cbo.returnpath.hiveop=true;
  set hive.stats.fetch.column.stats=true;
 diff --git ql/src/test/queries/clientpositive/cbo_rp_auto_join1.q ql/src/test/queries/clientpositive/cbo_rp_auto_join1.q
-index e9e434cd09..0170612a8c 100644
+index e9e434cd09..9137669281 100644
 --- ql/src/test/queries/clientpositive/cbo_rp_auto_join1.q
 +++ ql/src/test/queries/clientpositive/cbo_rp_auto_join1.q
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,6 @@
 +--! qt:dataset:src1
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.cbo.returnpath.hiveop=true;
  set hive.stats.fetch.column.stats=true;
  set hive.optimize.semijoin.conversion=true;
@@ -6721,12 +7127,13 @@ index 8d3aac8a44..feedcba442 100644
  set hive.cbo.enable=true;
  set hive.cbo.returnpath.hiveop=true;
 diff --git ql/src/test/queries/clientpositive/cbo_rp_union.q ql/src/test/queries/clientpositive/cbo_rp_union.q
-index cf2cf40210..124eac028d 100644
+index cf2cf40210..df296586c6 100644
 --- ql/src/test/queries/clientpositive/cbo_rp_union.q
 +++ ql/src/test/queries/clientpositive/cbo_rp_union.q
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,6 @@
 +--! qt:dataset:cbo_t3
 +--! qt:dataset:cbo_t2
++--! qt:dataset:cbo_t1
  set hive.mapred.mode=nonstrict;
  set hive.cbo.enable=true;
  set hive.cbo.returnpath.hiveop=true;
@@ -6850,12 +7257,13 @@ index 8534cecd37..680726d52d 100644
  set hive.mapred.mode=nonstrict;
  set hive.cbo.enable=true;
 diff --git ql/src/test/queries/clientpositive/cbo_union.q ql/src/test/queries/clientpositive/cbo_union.q
-index 42d28e161a..1644745828 100644
+index 42d28e161a..8ae556f2c7 100644
 --- ql/src/test/queries/clientpositive/cbo_union.q
 +++ ql/src/test/queries/clientpositive/cbo_union.q
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,6 @@
 +--! qt:dataset:cbo_t3
 +--! qt:dataset:cbo_t2
++--! qt:dataset:cbo_t1
  set hive.mapred.mode=nonstrict;
  set hive.cbo.enable=true;
  set hive.exec.check.crossproducts=false;
@@ -6971,11 +7379,12 @@ index 851a8212c4..b55cc1da58 100644
  
  CREATE TABLE columnarserde_create_shortcut(a array<int>, b array<string>, c map<string,string>, d int, e string) STORED AS RCFILE;
 diff --git ql/src/test/queries/clientpositive/columnstats_part_coltype.q ql/src/test/queries/clientpositive/columnstats_part_coltype.q
-index 472d227664..7aea189f97 100644
+index 472d227664..e6ea25a829 100644
 --- ql/src/test/queries/clientpositive/columnstats_part_coltype.q
 +++ ql/src/test/queries/clientpositive/columnstats_part_coltype.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  -- Test type date, int, and string in partition column
  drop table if exists partcolstats;
@@ -7054,11 +7463,12 @@ index 3fa0ce4c45..9b0487be10 100644
  
  select concat('a','b','c');
 diff --git ql/src/test/queries/clientpositive/concatenate_inherit_table_location.q ql/src/test/queries/clientpositive/concatenate_inherit_table_location.q
-index 1ae194338c..431ede5eeb 100644
+index 1ae194338c..8deaf68713 100644
 --- ql/src/test/queries/clientpositive/concatenate_inherit_table_location.q
 +++ ql/src/test/queries/clientpositive/concatenate_inherit_table_location.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  CREATE TABLE citl_table (key STRING, value STRING) PARTITIONED BY (part STRING)
  STORED AS RCFILE
  LOCATION 'pfile:${system:test.tmp.dir}/citl_table';
@@ -7107,10 +7517,11 @@ index cfe0c30068..3d3016fdf0 100644
  set hive.mapred.mode=nonstrict;
  
 diff --git ql/src/test/queries/clientpositive/constant_prop_2.q ql/src/test/queries/clientpositive/constant_prop_2.q
-index 4bc14a6487..8ac4e99ca2 100644
+index 4bc14a6487..ab4c042def 100644
 --- ql/src/test/queries/clientpositive/constant_prop_2.q
 +++ ql/src/test/queries/clientpositive/constant_prop_2.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:srcpart
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  set hive.compute.query.using.stats=true;
@@ -7595,6 +8006,22 @@ index 03af69fd3b..2f0e9c0430 100644
  drop table ctas_date_1;
  drop table ctas_date_2;
  drop view ctas_date_3;
+diff --git ql/src/test/queries/clientpositive/ctas_uses_database_location.q ql/src/test/queries/clientpositive/ctas_uses_database_location.q
+index 86c940a25b..1c21981768 100644
+--- ql/src/test/queries/clientpositive/ctas_uses_database_location.q
++++ ql/src/test/queries/clientpositive/ctas_uses_database_location.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ set hive.metastore.warehouse.dir=invalid_scheme://${system:test.tmp.dir};
+ 
+ -- Tests that CTAS queries in non-default databases use the location of the database
+diff --git ql/src/test/queries/clientpositive/ctas_uses_table_location.q ql/src/test/queries/clientpositive/ctas_uses_table_location.q
+index b11e3bdec3..560ea854ea 100644
+--- ql/src/test/queries/clientpositive/ctas_uses_table_location.q
++++ ql/src/test/queries/clientpositive/ctas_uses_table_location.q
+@@ -1 +1,2 @@
++--! qt:dataset:src
+ CREATE TABLE ctas_table_with_loc LOCATION '${hiveconf:hive.metastore.warehouse.dir}/default/ctas_table_with_loc' AS SELECT * FROM default.src;
 diff --git ql/src/test/queries/clientpositive/ctas_varchar.q ql/src/test/queries/clientpositive/ctas_varchar.q
 index f646b36c8a..8046a763f3 100644
 --- ql/src/test/queries/clientpositive/ctas_varchar.q
@@ -7783,15 +8210,25 @@ index 949303a576..95621246ee 100644
  
  CREATE TABLE src1_rot13_iof(key STRING, value STRING)
 diff --git ql/src/test/queries/clientpositive/database.q ql/src/test/queries/clientpositive/database.q
-index 322dce526a..f4c28066f0 100644
+index 322dce526a..77d211a8fc 100644
 --- ql/src/test/queries/clientpositive/database.q
 +++ ql/src/test/queries/clientpositive/database.q
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,6 @@
++--! qt:dataset:srcpart
 +--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  set hive.support.concurrency = true;
  
+diff --git ql/src/test/queries/clientpositive/database_drop.q ql/src/test/queries/clientpositive/database_drop.q
+index 1a892e760e..cf33ea9eaa 100644
+--- ql/src/test/queries/clientpositive/database_drop.q
++++ ql/src/test/queries/clientpositive/database_drop.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ -- create database with multiple tables, views.
+ -- Use both partitioned and non-partitioned tables, as well as
+ -- tables with specific storage locations
 diff --git ql/src/test/queries/clientpositive/date_1.q ql/src/test/queries/clientpositive/date_1.q
 index 7d89ac9268..c77746070d 100644
 --- ql/src/test/queries/clientpositive/date_1.q
@@ -7900,6 +8337,15 @@ index 3c41ed5c84..001e30e0df 100644
  set hive.mapred.mode=nonstrict;
  set hive.support.concurrency=true;
  set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
+diff --git ql/src/test/queries/clientpositive/delete_orig_table.q ql/src/test/queries/clientpositive/delete_orig_table.q
+index 81c7cba35b..f16de0e1dc 100644
+--- ql/src/test/queries/clientpositive/delete_orig_table.q
++++ ql/src/test/queries/clientpositive/delete_orig_table.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:alltypesorc
+ set hive.support.concurrency=true;
+ set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
+ set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
 diff --git ql/src/test/queries/clientpositive/delete_tmp_table.q ql/src/test/queries/clientpositive/delete_tmp_table.q
 index 49e586f7c0..1aea4aa778 100644
 --- ql/src/test/queries/clientpositive/delete_tmp_table.q
@@ -7963,6 +8409,15 @@ index 150ff70641..97fc0cd2a1 100644
  set hive.ddl.output.format=json;
  
  DROP VIEW view_partitioned;
+diff --git ql/src/test/queries/clientpositive/describe_syntax.q ql/src/test/queries/clientpositive/describe_syntax.q
+index 9659e9abf7..3f9db316b2 100644
+--- ql/src/test/queries/clientpositive/describe_syntax.q
++++ ql/src/test/queries/clientpositive/describe_syntax.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ 
+ CREATE DATABASE db1;
+ CREATE TABLE db1.t1(key1 INT, value1 STRING) PARTITIONED BY (ds STRING, part STRING);
 diff --git ql/src/test/queries/clientpositive/describe_table.q ql/src/test/queries/clientpositive/describe_table.q
 index c0256926b6..4016236083 100644
 --- ql/src/test/queries/clientpositive/describe_table.q
@@ -8053,12 +8508,23 @@ index 191c15436b..08db585aa7 100644
  SET hive.exec.driver.run.hooks=org.apache.hadoop.hive.ql.hooks.DriverTestHook;
  
  -- This query should appear in the Hive CLI output.
+diff --git ql/src/test/queries/clientpositive/drop_database_removes_partition_dirs.q ql/src/test/queries/clientpositive/drop_database_removes_partition_dirs.q
+index a5f5189491..e46460fbee 100644
+--- ql/src/test/queries/clientpositive/drop_database_removes_partition_dirs.q
++++ ql/src/test/queries/clientpositive/drop_database_removes_partition_dirs.q
+@@ -1,3 +1,5 @@
++--! qt:dataset:src
++--! qt:dataset:part
+ -- This test verifies that if a partition exists outside a table's current location when the
+ -- database is dropped the partition's location is dropped as well.
+ 
 diff --git ql/src/test/queries/clientpositive/drop_table_removes_partition_dirs.q ql/src/test/queries/clientpositive/drop_table_removes_partition_dirs.q
-index 102b3ef5f5..b90cb9668d 100644
+index 102b3ef5f5..1ba3f85fdd 100644
 --- ql/src/test/queries/clientpositive/drop_table_removes_partition_dirs.q
 +++ ql/src/test/queries/clientpositive/drop_table_removes_partition_dirs.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  -- This test verifies that if a partition exists outside the table's current location when the
  -- table is dropped the partition's location is dropped as well.
  
@@ -8356,6 +8822,24 @@ index da18684d70..acd0866600 100644
  drop table table_asc;
  drop table table_desc;
  
+diff --git ql/src/test/queries/clientpositive/escape1.q ql/src/test/queries/clientpositive/escape1.q
+index ac499e30ac..bda2088071 100644
+--- ql/src/test/queries/clientpositive/escape1.q
++++ ql/src/test/queries/clientpositive/escape1.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.compute.query.using.stats=false;
+ set hive.mapred.mode=nonstrict;
+ set hive.exec.dynamic.partition=true;
+diff --git ql/src/test/queries/clientpositive/escape2.q ql/src/test/queries/clientpositive/escape2.q
+index 840b920739..6bc1588187 100644
+--- ql/src/test/queries/clientpositive/escape2.q
++++ ql/src/test/queries/clientpositive/escape2.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.compute.query.using.stats=false;
+ set hive.mapred.mode=nonstrict;
+ set hive.exec.dynamic.partition=true;
 diff --git ql/src/test/queries/clientpositive/escape_clusterby1.q ql/src/test/queries/clientpositive/escape_clusterby1.q
 index 13ea151539..98305b56b0 100644
 --- ql/src/test/queries/clientpositive/escape_clusterby1.q
@@ -8488,10 +8972,11 @@ index 6611922016..b59e7347ed 100644
  set hive.mapred.mode=nonstrict;
  
 diff --git ql/src/test/queries/clientpositive/explainanalyze_2.q ql/src/test/queries/clientpositive/explainanalyze_2.q
-index 0b0749ee74..4975e8506d 100644
+index 0b0749ee74..e708664022 100644
 --- ql/src/test/queries/clientpositive/explainanalyze_2.q
 +++ ql/src/test/queries/clientpositive/explainanalyze_2.q
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,6 @@
++--! qt:dataset:srcpart
 +--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.map.aggr=false;
@@ -8517,12 +9002,13 @@ index 498a128c87..cf8b864374 100644
  
  set hive.mapred.mode=nonstrict;
 diff --git ql/src/test/queries/clientpositive/explainanalyze_5.q ql/src/test/queries/clientpositive/explainanalyze_5.q
-index 696064c874..00d227c811 100644
+index 696064c874..17f26ca231 100644
 --- ql/src/test/queries/clientpositive/explainanalyze_5.q
 +++ ql/src/test/queries/clientpositive/explainanalyze_5.q
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,6 @@
 +--! qt:dataset:src1
 +--! qt:dataset:src
++--! qt:dataset:alltypesorc
  set hive.map.aggr=false;
  
  set hive.stats.column.autogather=true;
@@ -9275,20 +9761,22 @@ index d0bf0fb817..37ecd90bdb 100644
  set hive.transpose.aggr.join=true;
  EXPLAIN
 diff --git ql/src/test/queries/clientpositive/groupby_map_ppr.q ql/src/test/queries/clientpositive/groupby_map_ppr.q
-index cec370fd49..99776d1984 100644
+index cec370fd49..d42416e5b8 100644
 --- ql/src/test/queries/clientpositive/groupby_map_ppr.q
 +++ ql/src/test/queries/clientpositive/groupby_map_ppr.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:srcpart
++--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  set hive.map.aggr=true;
  set hive.groupby.skewindata=false;
 diff --git ql/src/test/queries/clientpositive/groupby_map_ppr_multi_distinct.q ql/src/test/queries/clientpositive/groupby_map_ppr_multi_distinct.q
-index 21ca1241fc..dbe2a3d4c4 100644
+index 21ca1241fc..5d969838d9 100644
 --- ql/src/test/queries/clientpositive/groupby_map_ppr_multi_distinct.q
 +++ ql/src/test/queries/clientpositive/groupby_map_ppr_multi_distinct.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:srcpart
++--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  set hive.map.aggr=true;
  set hive.groupby.skewindata=false;
@@ -9348,20 +9836,22 @@ index 446b99d3cb..e69109671f 100644
  set hive.groupby.orderby.position.alias=true;
  
 diff --git ql/src/test/queries/clientpositive/groupby_ppr.q ql/src/test/queries/clientpositive/groupby_ppr.q
-index 2f75afc19e..d832e0a372 100644
+index 2f75afc19e..8cad28f016 100644
 --- ql/src/test/queries/clientpositive/groupby_ppr.q
 +++ ql/src/test/queries/clientpositive/groupby_ppr.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:srcpart
++--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  set hive.map.aggr=false;
  set hive.groupby.skewindata=false;
 diff --git ql/src/test/queries/clientpositive/groupby_ppr_multi_distinct.q ql/src/test/queries/clientpositive/groupby_ppr_multi_distinct.q
-index 357ab9586c..a110645b5a 100644
+index 357ab9586c..a88d6ff21d 100644
 --- ql/src/test/queries/clientpositive/groupby_ppr_multi_distinct.q
 +++ ql/src/test/queries/clientpositive/groupby_ppr_multi_distinct.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:srcpart
++--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  set hive.map.aggr=false;
  set hive.groupby.skewindata=false;
@@ -9392,6 +9882,24 @@ index 3b6c172f54..15976942ee 100644
  set hive.mapred.mode=nonstrict;
  set hive.exec.reducers.max = 1;
  set hive.map.groupby.sorted=true;
+diff --git ql/src/test/queries/clientpositive/groupby_sort_5.q ql/src/test/queries/clientpositive/groupby_sort_5.q
+index c7ff184cf3..1fdd404067 100644
+--- ql/src/test/queries/clientpositive/groupby_sort_5.q
++++ ql/src/test/queries/clientpositive/groupby_sort_5.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.mapred.mode=nonstrict;
+ set hive.exec.reducers.max = 10;
+ set hive.map.groupby.sorted=true;
+diff --git ql/src/test/queries/clientpositive/groupby_sort_7.q ql/src/test/queries/clientpositive/groupby_sort_7.q
+index 07b56a276d..f0aea3593d 100644
+--- ql/src/test/queries/clientpositive/groupby_sort_7.q
++++ ql/src/test/queries/clientpositive/groupby_sort_7.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.mapred.mode=nonstrict;
+ set hive.exec.reducers.max = 10;
+ set hive.map.groupby.sorted=true;
 diff --git ql/src/test/queries/clientpositive/having.q ql/src/test/queries/clientpositive/having.q
 index 52bf4ab5b5..d23f2d0f64 100644
 --- ql/src/test/queries/clientpositive/having.q
@@ -9401,6 +9909,15 @@ index 52bf4ab5b5..d23f2d0f64 100644
  set hive.mapred.mode=nonstrict;
  set hive.explain.user=false;
  -- SORT_QUERY_RESULTS
+diff --git ql/src/test/queries/clientpositive/having2.q ql/src/test/queries/clientpositive/having2.q
+index 7b35365754..6b34b68c45 100644
+--- ql/src/test/queries/clientpositive/having2.q
++++ ql/src/test/queries/clientpositive/having2.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ set hive.mapred.mode=nonstrict;
+ 
+ CREATE TABLE TestV1_Staples (
 diff --git ql/src/test/queries/clientpositive/hll.q ql/src/test/queries/clientpositive/hll.q
 index 91c4e788d3..b6b67e23dc 100644
 --- ql/src/test/queries/clientpositive/hll.q
@@ -9460,29 +9977,32 @@ index 808ad6681f..acec29639e 100644
  create table implicit_cast_during_insert (c1 int, c2 string)
    partitioned by (p1 string) stored as orc;
 diff --git ql/src/test/queries/clientpositive/infer_bucket_sort.q ql/src/test/queries/clientpositive/infer_bucket_sort.q
-index 3423299a5d..0dcd521e03 100644
+index 3423299a5d..39789250c6 100644
 --- ql/src/test/queries/clientpositive/infer_bucket_sort.q
 +++ ql/src/test/queries/clientpositive/infer_bucket_sort.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  set hive.exec.infer.bucket.sort=true;
  
 diff --git ql/src/test/queries/clientpositive/infer_bucket_sort_bucketed_table.q ql/src/test/queries/clientpositive/infer_bucket_sort_bucketed_table.q
-index 72682c5415..2a64e5f633 100644
+index 72682c5415..0d4fcedc97 100644
 --- ql/src/test/queries/clientpositive/infer_bucket_sort_bucketed_table.q
 +++ ql/src/test/queries/clientpositive/infer_bucket_sort_bucketed_table.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  
  
  set hive.exec.infer.bucket.sort=true;
 diff --git ql/src/test/queries/clientpositive/infer_bucket_sort_convert_join.q ql/src/test/queries/clientpositive/infer_bucket_sort_convert_join.q
-index e4170283f3..6c3379cae9 100644
+index e4170283f3..10b5d4f85c 100644
 --- ql/src/test/queries/clientpositive/infer_bucket_sort_convert_join.q
 +++ ql/src/test/queries/clientpositive/infer_bucket_sort_convert_join.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.stats.column.autogather=false;
  -- sounds weird:
  -- on master, when auto=true, hive.mapjoin.localtask.max.memory.usage will be 0.55 as there is a gby
@@ -9496,47 +10016,52 @@ index 5b5bf8e3f9..155b78de85 100644
  
  set hive.mapred.mode=nonstrict;
 diff --git ql/src/test/queries/clientpositive/infer_bucket_sort_grouping_operators.q ql/src/test/queries/clientpositive/infer_bucket_sort_grouping_operators.q
-index e1a6ead58d..99778395ef 100644
+index e1a6ead58d..f3f22ae34e 100644
 --- ql/src/test/queries/clientpositive/infer_bucket_sort_grouping_operators.q
 +++ ql/src/test/queries/clientpositive/infer_bucket_sort_grouping_operators.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  set hive.exec.infer.bucket.sort=true;
  
 diff --git ql/src/test/queries/clientpositive/infer_bucket_sort_list_bucket.q ql/src/test/queries/clientpositive/infer_bucket_sort_list_bucket.q
-index 64dd05db68..50c5df7325 100644
+index 64dd05db68..547946822a 100644
 --- ql/src/test/queries/clientpositive/infer_bucket_sort_list_bucket.q
 +++ ql/src/test/queries/clientpositive/infer_bucket_sort_list_bucket.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.merge.mapfiles=false;
  set hive.merge.mapredfiles=false; 
  set mapred.input.dir.recursive=true;
 diff --git ql/src/test/queries/clientpositive/infer_bucket_sort_map_operators.q ql/src/test/queries/clientpositive/infer_bucket_sort_map_operators.q
-index 1a778fa362..ddb76a8e15 100644
+index 1a778fa362..782145b82a 100644
 --- ql/src/test/queries/clientpositive/infer_bucket_sort_map_operators.q
 +++ ql/src/test/queries/clientpositive/infer_bucket_sort_map_operators.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  set hive.exec.infer.bucket.sort=true;
  ;
 diff --git ql/src/test/queries/clientpositive/infer_bucket_sort_merge.q ql/src/test/queries/clientpositive/infer_bucket_sort_merge.q
-index f8cde4bdf2..6f22af291d 100644
+index f8cde4bdf2..cf44041eff 100644
 --- ql/src/test/queries/clientpositive/infer_bucket_sort_merge.q
 +++ ql/src/test/queries/clientpositive/infer_bucket_sort_merge.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  set hive.exec.infer.bucket.sort=true;
  set hive.exec.infer.bucket.sort.num.buckets.power.two=true;
 diff --git ql/src/test/queries/clientpositive/infer_bucket_sort_multi_insert.q ql/src/test/queries/clientpositive/infer_bucket_sort_multi_insert.q
-index 3341df0893..df3a661fba 100644
+index 3341df0893..73f760934a 100644
 --- ql/src/test/queries/clientpositive/infer_bucket_sort_multi_insert.q
 +++ ql/src/test/queries/clientpositive/infer_bucket_sort_multi_insert.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.exec.infer.bucket.sort=true;
  set hive.exec.infer.bucket.sort.num.buckets.power.two=true;
  set hive.stats.dbclass=fs;
@@ -9550,11 +10075,12 @@ index 2255bdb349..23839782c6 100644
  set hive.merge.mapfiles=false;
  set hive.merge.mapredfiles=false;
 diff --git ql/src/test/queries/clientpositive/infer_bucket_sort_reducers_power_two.q ql/src/test/queries/clientpositive/infer_bucket_sort_reducers_power_two.q
-index c0ddb8bce6..dccdbf5107 100644
+index c0ddb8bce6..c017502df5 100644
 --- ql/src/test/queries/clientpositive/infer_bucket_sort_reducers_power_two.q
 +++ ql/src/test/queries/clientpositive/infer_bucket_sort_reducers_power_two.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.stats.column.autogather=false;
  set hive.mapred.mode=nonstrict;
  set hive.exec.infer.bucket.sort=true;
@@ -9798,11 +10324,12 @@ index 56093ebcd0..eb481666dc 100644
  
  
 diff --git ql/src/test/queries/clientpositive/input32.q ql/src/test/queries/clientpositive/input32.q
-index 6953caa76a..befcbe2c15 100644
+index 6953caa76a..bbb304812e 100644
 --- ql/src/test/queries/clientpositive/input32.q
 +++ ql/src/test/queries/clientpositive/input32.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:srcbucket
++--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  
  
@@ -10358,12 +10885,22 @@ index fb00346a69..bd9f777808 100644
  set hive.mapred.mode=nonstrict;
  set hive.support.concurrency=true;
  set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
+diff --git ql/src/test/queries/clientpositive/insert_values_orig_table.q ql/src/test/queries/clientpositive/insert_values_orig_table.q
+index 1319a0a0e5..a0fce90fc2 100644
+--- ql/src/test/queries/clientpositive/insert_values_orig_table.q
++++ ql/src/test/queries/clientpositive/insert_values_orig_table.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:alltypesorc
+ set hive.support.concurrency=true;
+ set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
+ set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
 diff --git ql/src/test/queries/clientpositive/insert_values_orig_table_use_metadata.q ql/src/test/queries/clientpositive/insert_values_orig_table_use_metadata.q
-index 2f366fbfb4..5cdccd3690 100644
+index 2f366fbfb4..ff7c1a8355 100644
 --- ql/src/test/queries/clientpositive/insert_values_orig_table_use_metadata.q
 +++ ql/src/test/queries/clientpositive/insert_values_orig_table_use_metadata.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:alltypesorc
  set hive.support.concurrency=true;
  set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
  set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
@@ -10562,10 +11099,11 @@ index a12ef1afb0..e9107b5d0e 100644
  
  CREATE TABLE dest1(c1 INT, c2 STRING) STORED AS TEXTFILE;
 diff --git ql/src/test/queries/clientpositive/join15.q ql/src/test/queries/clientpositive/join15.q
-index 4d2f8d5466..50343c63b1 100644
+index 4d2f8d5466..0ae46c5733 100644
 --- ql/src/test/queries/clientpositive/join15.q
 +++ ql/src/test/queries/clientpositive/join15.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  -- SORT_QUERY_RESULTS
  
@@ -10619,37 +11157,41 @@ index c3c7c241e9..074255bb63 100644
  set hive.stats.column.autogather=false;
  set hive.mapred.mode=nonstrict;
 diff --git ql/src/test/queries/clientpositive/join20.q ql/src/test/queries/clientpositive/join20.q
-index b2b1eba10d..dbd9f4e243 100644
+index b2b1eba10d..199c4b4dc0 100644
 --- ql/src/test/queries/clientpositive/join20.q
 +++ ql/src/test/queries/clientpositive/join20.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  -- SORT_QUERY_RESULTS
  
  EXPLAIN
 diff --git ql/src/test/queries/clientpositive/join21.q ql/src/test/queries/clientpositive/join21.q
-index 8ba22843f4..43ea6d15fb 100644
+index 8ba22843f4..796fe80cbf 100644
 --- ql/src/test/queries/clientpositive/join21.q
 +++ ql/src/test/queries/clientpositive/join21.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  -- SORT_QUERY_RESULTS
  
  EXPLAIN
 diff --git ql/src/test/queries/clientpositive/join22.q ql/src/test/queries/clientpositive/join22.q
-index 525adfe462..302b6e9d7b 100644
+index 525adfe462..3a10cfc9c9 100644
 --- ql/src/test/queries/clientpositive/join22.q
 +++ ql/src/test/queries/clientpositive/join22.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  explain
  SELECT src5.src1_value FROM (SELECT src3.*, src4.value as src4_value, src4.key as src4_key FROM src src4 JOIN (SELECT src2.*, src1.key as src1_key, src1.value as src1_value FROM src src1 JOIN src src2 ON src1.key = src2.key) src3 ON src3.src1_key = src4.key) src5;
 diff --git ql/src/test/queries/clientpositive/join23.q ql/src/test/queries/clientpositive/join23.q
-index d48941a11d..c0b7921620 100644
+index d48941a11d..bb35103b10 100644
 --- ql/src/test/queries/clientpositive/join23.q
 +++ ql/src/test/queries/clientpositive/join23.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  -- SORT_QUERY_RESULTS
@@ -10856,14 +11398,25 @@ index ee349834e9..4c983d8029 100644
  set hive.join.cache.size=1;
  
 diff --git ql/src/test/queries/clientpositive/join41.q ql/src/test/queries/clientpositive/join41.q
-index b3bea805d8..7bfb778385 100644
+index b3bea805d8..33dfcb087e 100644
 --- ql/src/test/queries/clientpositive/join41.q
 +++ ql/src/test/queries/clientpositive/join41.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,6 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  create table s1 as select * from src where key = 0;
  
+diff --git ql/src/test/queries/clientpositive/join44.q ql/src/test/queries/clientpositive/join44.q
+index 01110792ad..69aa088264 100644
+--- ql/src/test/queries/clientpositive/join44.q
++++ ql/src/test/queries/clientpositive/join44.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src1
+ set hive.cbo.enable=false;
+ 
+ -- SORT_QUERY_RESULTS
 diff --git ql/src/test/queries/clientpositive/join45.q ql/src/test/queries/clientpositive/join45.q
 index 54e422d2c9..c0c7717dbe 100644
 --- ql/src/test/queries/clientpositive/join45.q
@@ -11093,11 +11646,12 @@ index 5016369e07..d3c61f7d59 100644
  -- SORT_QUERY_RESULTS
  
 diff --git ql/src/test/queries/clientpositive/join_parse.q ql/src/test/queries/clientpositive/join_parse.q
-index 080933c545..3374080844 100644
+index 080933c545..a99d542dab 100644
 --- ql/src/test/queries/clientpositive/join_parse.q
 +++ ql/src/test/queries/clientpositive/join_parse.q
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,6 @@
 +--! qt:dataset:srcpart
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  explain
@@ -11193,11 +11747,12 @@ index 1b5479a38f..edcfd9fbfd 100644
  
  CREATE TEMPORARY FUNCTION explode2 AS 'org.apache.hadoop.hive.contrib.udtf.example.GenericUDTFExplode2';
 diff --git ql/src/test/queries/clientpositive/lateral_view_noalias.q ql/src/test/queries/clientpositive/lateral_view_noalias.q
-index df7343259a..5c123c8a62 100644
+index df7343259a..ae80ee34f1 100644
 --- ql/src/test/queries/clientpositive/lateral_view_noalias.q
 +++ ql/src/test/queries/clientpositive/lateral_view_noalias.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.fetch.task.conversion=more;
  
  --HIVE-2608 Do not require AS a,b,c part in LATERAL VIEW
@@ -11239,11 +11794,12 @@ index 65ae518cd5..6b76a7b0c0 100644
  
  EXPLAIN SELECT value, myCol FROM (SELECT * FROM src LATERAL VIEW explode(array(1,2,3)) myTable AS myCol) a WHERE key='0';
 diff --git ql/src/test/queries/clientpositive/lb_fs_stats.q ql/src/test/queries/clientpositive/lb_fs_stats.q
-index 5ad3ff3a5e..d3128bad7f 100644
+index 5ad3ff3a5e..08baae74bd 100644
 --- ql/src/test/queries/clientpositive/lb_fs_stats.q
 +++ ql/src/test/queries/clientpositive/lb_fs_stats.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
  set hive.merge.mapfiles=false;	
  set hive.merge.mapredfiles=false; 
@@ -11284,10 +11840,11 @@ index 5d3fa9c658..00597cac23 100644
  explain select key from src where key = '238' limit 0;
  explain select * from src where key = '238' limit 0;
 diff --git ql/src/test/queries/clientpositive/limit_join_transpose.q ql/src/test/queries/clientpositive/limit_join_transpose.q
-index 087839d11f..7e6d796e29 100644
+index 087839d11f..09faf9309a 100644
 --- ql/src/test/queries/clientpositive/limit_join_transpose.q
 +++ ql/src/test/queries/clientpositive/limit_join_transpose.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  set hive.optimize.limittranspose=false;
@@ -11945,11 +12502,12 @@ index bc98ca8f0e..5d061da3fc 100644
  
  -- SORT_QUERY_RESULTS
 diff --git ql/src/test/queries/clientpositive/mapjoin_hint.q ql/src/test/queries/clientpositive/mapjoin_hint.q
-index fc85cc97bc..dbdb3d4c5b 100644
+index fc85cc97bc..21b4896b84 100644
 --- ql/src/test/queries/clientpositive/mapjoin_hint.q
 +++ ql/src/test/queries/clientpositive/mapjoin_hint.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:srcpart
++--! qt:dataset:part
  set hive.compute.query.using.stats=false;
  set hive.mapred.mode=nonstrict;
  set hive.explain.user=false;
@@ -12114,6 +12672,15 @@ index cf12da9549..707d53afd5 100644
  set hive.mapred.mode=nonstrict;
  set hive.security.authorization.manager=org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactoryForTest;
  
+diff --git ql/src/test/queries/clientpositive/masking_1_newdb.q ql/src/test/queries/clientpositive/masking_1_newdb.q
+index 42c33dc9fd..7438349b82 100644
+--- ql/src/test/queries/clientpositive/masking_1_newdb.q
++++ ql/src/test/queries/clientpositive/masking_1_newdb.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ set hive.mapred.mode=nonstrict;
+ set hive.security.authorization.manager=org.apache.hadoop.hive.ql.security.authorization.plugin.sqlstd.SQLStdHiveAuthorizerFactoryForTest;
+ 
 diff --git ql/src/test/queries/clientpositive/masking_2.q ql/src/test/queries/clientpositive/masking_2.q
 index fc4a71e51b..3192992811 100644
 --- ql/src/test/queries/clientpositive/masking_2.q
@@ -12234,6 +12801,24 @@ index 88971595c7..39d63587de 100644
  create materialized view dmv_mat_view as select cint, cstring1 from alltypesorc where cint < 0;
  
  show table extended like dmv_mat_view;
+diff --git ql/src/test/queries/clientpositive/materialized_view_rewrite_ssb.q ql/src/test/queries/clientpositive/materialized_view_rewrite_ssb.q
+index 0177188443..ef85acb55b 100644
+--- ql/src/test/queries/clientpositive/materialized_view_rewrite_ssb.q
++++ ql/src/test/queries/clientpositive/materialized_view_rewrite_ssb.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.support.concurrency=true;
+ set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
+ set hive.strict.checks.cartesian.product=false;
+diff --git ql/src/test/queries/clientpositive/materialized_view_rewrite_ssb_2.q ql/src/test/queries/clientpositive/materialized_view_rewrite_ssb_2.q
+index 7c4d119540..d3914be722 100644
+--- ql/src/test/queries/clientpositive/materialized_view_rewrite_ssb_2.q
++++ ql/src/test/queries/clientpositive/materialized_view_rewrite_ssb_2.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.support.concurrency=true;
+ set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
+ set hive.strict.checks.cartesian.product=false;
 diff --git ql/src/test/queries/clientpositive/merge1.q ql/src/test/queries/clientpositive/merge1.q
 index e64492b06d..bd8a8570fc 100644
 --- ql/src/test/queries/clientpositive/merge1.q
@@ -12429,11 +13014,12 @@ index a20d9cad35..0fa46a96f2 100644
  set hive.support.concurrency=true;
  set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
 diff --git ql/src/test/queries/clientpositive/mm_exim.q ql/src/test/queries/clientpositive/mm_exim.q
-index d084125e86..6c1c23d51f 100644
+index d084125e86..c47342bd23 100644
 --- ql/src/test/queries/clientpositive/mm_exim.q
 +++ ql/src/test/queries/clientpositive/mm_exim.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  set hive.explain.user=false;
  set hive.fetch.task.conversion=none;
@@ -12547,10 +13133,11 @@ index 3ddaa47f78..670211c6aa 100644
  set hive.stats.dbclass=fs;
  -- SORT_QUERY_RESULTS
 diff --git ql/src/test/queries/clientpositive/multi_insert_union_src.q ql/src/test/queries/clientpositive/multi_insert_union_src.q
-index 51b4695a86..512840c777 100644
+index 51b4695a86..ae4c8d4b60 100644
 --- ql/src/test/queries/clientpositive/multi_insert_union_src.q
 +++ ql/src/test/queries/clientpositive/multi_insert_union_src.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  drop table if exists src2;
@@ -12574,10 +13161,11 @@ index e7dcb62cee..584ff9805c 100644
  add file ../../data/scripts/newline.py;
  set hive.transform.escape.input=true;
 diff --git ql/src/test/queries/clientpositive/no_hooks.q ql/src/test/queries/clientpositive/no_hooks.q
-index 7e80a9dddd..4d9460db99 100644
+index 7e80a9dddd..6191743d9e 100644
 --- ql/src/test/queries/clientpositive/no_hooks.q
 +++ ql/src/test/queries/clientpositive/no_hooks.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  set hive.exec.pre.hooks=;
@@ -12820,11 +13408,12 @@ index 06472008ed..ec0f700959 100644
  -- SORT_QUERY_RESULTS
  
 diff --git ql/src/test/queries/clientpositive/orc_createas1.q ql/src/test/queries/clientpositive/orc_createas1.q
-index b39d65de3d..2787c8e8a2 100644
+index b39d65de3d..ee7881c60e 100644
 --- ql/src/test/queries/clientpositive/orc_createas1.q
 +++ ql/src/test/queries/clientpositive/orc_createas1.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  set mapred.max.split.size=100;
  set mapred.min.split.size=1;
@@ -12838,11 +13427,12 @@ index a0eaab75fa..de7b4a49af 100644
  
  -- Set the threshold to -1 to guarantee dictionary encoding is turned off
 diff --git ql/src/test/queries/clientpositive/orc_diff_part_cols.q ql/src/test/queries/clientpositive/orc_diff_part_cols.q
-index 3bfdf99a0d..56198e4fd5 100644
+index 3bfdf99a0d..e11890805a 100644
 --- ql/src/test/queries/clientpositive/orc_diff_part_cols.q
 +++ ql/src/test/queries/clientpositive/orc_diff_part_cols.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  -- SORT_QUERY_RESULTS
  
@@ -12901,23 +13491,34 @@ index 1fc60b2fe8..5616769299 100644
  SET hive.vectorized.execution.enabled=true;
  
 diff --git ql/src/test/queries/clientpositive/orc_merge1.q ql/src/test/queries/clientpositive/orc_merge1.q
-index f704a1c8c1..a47aa8d0da 100644
+index f704a1c8c1..1f1af37723 100644
 --- ql/src/test/queries/clientpositive/orc_merge1.q
 +++ ql/src/test/queries/clientpositive/orc_merge1.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.compute.query.using.stats=false;
  set hive.mapred.mode=nonstrict;
  set hive.explain.user=false;
 diff --git ql/src/test/queries/clientpositive/orc_merge10.q ql/src/test/queries/clientpositive/orc_merge10.q
-index b84ed80a3f..81759411a0 100644
+index b84ed80a3f..263f478d09 100644
 --- ql/src/test/queries/clientpositive/orc_merge10.q
 +++ ql/src/test/queries/clientpositive/orc_merge10.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.compute.query.using.stats=false;
  set hive.mapred.mode=nonstrict;
  set hive.explain.user=false;
+diff --git ql/src/test/queries/clientpositive/orc_merge13.q ql/src/test/queries/clientpositive/orc_merge13.q
+index 8f013a0d09..ff98b64d84 100644
+--- ql/src/test/queries/clientpositive/orc_merge13.q
++++ ql/src/test/queries/clientpositive/orc_merge13.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ drop table aa;
+ create table aa (a string, b int) stored as orc;
+ insert into table aa values("b",2);
 diff --git ql/src/test/queries/clientpositive/orc_merge2.q ql/src/test/queries/clientpositive/orc_merge2.q
 index 667e878518..3253c4411a 100644
 --- ql/src/test/queries/clientpositive/orc_merge2.q
@@ -12955,11 +13556,12 @@ index 5f387bacea..3ac7ff725c 100644
  userid bigint,
  string1 string,
 diff --git ql/src/test/queries/clientpositive/orc_merge_diff_fs.q ql/src/test/queries/clientpositive/orc_merge_diff_fs.q
-index 94c0e6a35b..b43ec5c8a7 100644
+index 94c0e6a35b..8dd9f74d44 100644
 --- ql/src/test/queries/clientpositive/orc_merge_diff_fs.q
 +++ ql/src/test/queries/clientpositive/orc_merge_diff_fs.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.compute.query.using.stats=false;
  set hive.mapred.mode=nonstrict;
  set hive.explain.user=false;
@@ -12972,6 +13574,15 @@ index d6be11186c..562f998f1c 100644
  create table concat_incompat like alltypesorc;
  
  load data local inpath '../../data/files/alltypesorc' into table concat_incompat;
+diff --git ql/src/test/queries/clientpositive/orc_merge_incompat_writer_version.q ql/src/test/queries/clientpositive/orc_merge_incompat_writer_version.q
+index 5e188f7d36..5febb3bd5d 100644
+--- ql/src/test/queries/clientpositive/orc_merge_incompat_writer_version.q
++++ ql/src/test/queries/clientpositive/orc_merge_incompat_writer_version.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ DROP TABLE part_orc;
+ CREATE TABLE part_orc(
+   p_partkey int,
 diff --git ql/src/test/queries/clientpositive/orc_mr_pathalias.q ql/src/test/queries/clientpositive/orc_mr_pathalias.q
 index b92bb9c06c..ded6f252d4 100644
 --- ql/src/test/queries/clientpositive/orc_mr_pathalias.q
@@ -13000,64 +13611,71 @@ index 1c9e4dd6cb..dfd89a75ff 100644
  set hive.mapred.mode=nonstrict;
  SET hive.fetch.task.conversion=none;
 diff --git ql/src/test/queries/clientpositive/orc_ppd_boolean.q ql/src/test/queries/clientpositive/orc_ppd_boolean.q
-index d344714e2d..7adc3373aa 100644
+index d344714e2d..75650710d5 100644
 --- ql/src/test/queries/clientpositive/orc_ppd_boolean.q
 +++ ql/src/test/queries/clientpositive/orc_ppd_boolean.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  SET hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
  SET mapred.min.split.size=1000;
  SET mapred.max.split.size=5000;
 diff --git ql/src/test/queries/clientpositive/orc_ppd_char.q ql/src/test/queries/clientpositive/orc_ppd_char.q
-index 5c34d04636..407c7ae174 100644
+index 5c34d04636..48cbcf7d48 100644
 --- ql/src/test/queries/clientpositive/orc_ppd_char.q
 +++ ql/src/test/queries/clientpositive/orc_ppd_char.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  SET hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
  SET mapred.min.split.size=1000;
 diff --git ql/src/test/queries/clientpositive/orc_ppd_date.q ql/src/test/queries/clientpositive/orc_ppd_date.q
-index 3d21d4120b..d822bef097 100644
+index 3d21d4120b..2252b02050 100644
 --- ql/src/test/queries/clientpositive/orc_ppd_date.q
 +++ ql/src/test/queries/clientpositive/orc_ppd_date.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  SET hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
  SET mapred.min.split.size=1000;
  SET mapred.max.split.size=5000;
 diff --git ql/src/test/queries/clientpositive/orc_ppd_decimal.q ql/src/test/queries/clientpositive/orc_ppd_decimal.q
-index a54b8629ef..de826eb177 100644
+index a54b8629ef..91faa191b5 100644
 --- ql/src/test/queries/clientpositive/orc_ppd_decimal.q
 +++ ql/src/test/queries/clientpositive/orc_ppd_decimal.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  SET hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
  SET mapred.min.split.size=1000;
  SET mapred.max.split.size=5000;
 diff --git ql/src/test/queries/clientpositive/orc_ppd_is_null.q ql/src/test/queries/clientpositive/orc_ppd_is_null.q
-index 862a9616b1..ea11d093a5 100644
+index 862a9616b1..241f4d073f 100644
 --- ql/src/test/queries/clientpositive/orc_ppd_is_null.q
 +++ ql/src/test/queries/clientpositive/orc_ppd_is_null.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  SET hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
  SET mapred.min.split.size=1000;
  SET mapred.max.split.size=5000;
 diff --git ql/src/test/queries/clientpositive/orc_ppd_timestamp.q ql/src/test/queries/clientpositive/orc_ppd_timestamp.q
-index dafd6cfb45..a590eef7c1 100644
+index dafd6cfb45..062b5bea6c 100644
 --- ql/src/test/queries/clientpositive/orc_ppd_timestamp.q
 +++ ql/src/test/queries/clientpositive/orc_ppd_timestamp.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  SET hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
  SET mapred.min.split.size=1000;
  SET mapred.max.split.size=5000;
 diff --git ql/src/test/queries/clientpositive/orc_ppd_varchar.q ql/src/test/queries/clientpositive/orc_ppd_varchar.q
-index 0fecc664e4..5a359b90b7 100644
+index 0fecc664e4..e17f547230 100644
 --- ql/src/test/queries/clientpositive/orc_ppd_varchar.q
 +++ ql/src/test/queries/clientpositive/orc_ppd_varchar.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  SET hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
  SET mapred.min.split.size=1000;
@@ -13228,59 +13846,74 @@ index 56ca96ee61..5e82f958ae 100644
    key int,
    ldate string)
 diff --git ql/src/test/queries/clientpositive/parquet_ppd_boolean.q ql/src/test/queries/clientpositive/parquet_ppd_boolean.q
-index 059da6890b..8625ff01b9 100644
+index 059da6890b..818f65c62a 100644
 --- ql/src/test/queries/clientpositive/parquet_ppd_boolean.q
 +++ ql/src/test/queries/clientpositive/parquet_ppd_boolean.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  SET hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
  SET mapred.min.split.size=1000;
  SET mapred.max.split.size=5000;
 diff --git ql/src/test/queries/clientpositive/parquet_ppd_char.q ql/src/test/queries/clientpositive/parquet_ppd_char.q
-index eaddcb4fc2..5799001d54 100644
+index eaddcb4fc2..664bd35af8 100644
 --- ql/src/test/queries/clientpositive/parquet_ppd_char.q
 +++ ql/src/test/queries/clientpositive/parquet_ppd_char.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  SET hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
  SET hive.optimize.ppd=true;
  SET mapred.min.split.size=1000;
 diff --git ql/src/test/queries/clientpositive/parquet_ppd_date.q ql/src/test/queries/clientpositive/parquet_ppd_date.q
-index 41d0d64a7c..0a39b87df8 100644
+index 41d0d64a7c..c635128722 100644
 --- ql/src/test/queries/clientpositive/parquet_ppd_date.q
 +++ ql/src/test/queries/clientpositive/parquet_ppd_date.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  SET hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
  SET hive.optimize.ppd=true;
  SET mapred.min.split.size=1000;
 diff --git ql/src/test/queries/clientpositive/parquet_ppd_decimal.q ql/src/test/queries/clientpositive/parquet_ppd_decimal.q
-index ff883dbf48..d9da96ee1a 100644
+index ff883dbf48..684544c40c 100644
 --- ql/src/test/queries/clientpositive/parquet_ppd_decimal.q
 +++ ql/src/test/queries/clientpositive/parquet_ppd_decimal.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  SET hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
  SET mapred.min.split.size=1000;
  SET mapred.max.split.size=5000;
 diff --git ql/src/test/queries/clientpositive/parquet_ppd_timestamp.q ql/src/test/queries/clientpositive/parquet_ppd_timestamp.q
-index 1b9f6ff1a3..6f62c5bc48 100644
+index 1b9f6ff1a3..60fbe53c68 100644
 --- ql/src/test/queries/clientpositive/parquet_ppd_timestamp.q
 +++ ql/src/test/queries/clientpositive/parquet_ppd_timestamp.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  SET hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
  SET hive.optimize.ppd=true;
  SET mapred.min.split.size=1000;
 diff --git ql/src/test/queries/clientpositive/parquet_ppd_varchar.q ql/src/test/queries/clientpositive/parquet_ppd_varchar.q
-index 6449c6de0f..9d8a19b022 100644
+index 6449c6de0f..c30f0b3e7a 100644
 --- ql/src/test/queries/clientpositive/parquet_ppd_varchar.q
 +++ ql/src/test/queries/clientpositive/parquet_ppd_varchar.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  SET hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
  SET hive.optimize.ppd=true;
  SET mapred.min.split.size=1000;
+diff --git ql/src/test/queries/clientpositive/parquet_read_backward_compatible_files.q ql/src/test/queries/clientpositive/parquet_read_backward_compatible_files.q
+index f4928c7872..b2fa90e423 100644
+--- ql/src/test/queries/clientpositive/parquet_read_backward_compatible_files.q
++++ ql/src/test/queries/clientpositive/parquet_read_backward_compatible_files.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:alltypesparquet
+ -- This test makes sure that parquet can read older parquet files written by Hive <= 0.12
+ -- alltypesparquet is a files written by older version of Hive
+ 
 diff --git ql/src/test/queries/clientpositive/parquet_schema_evolution.q ql/src/test/queries/clientpositive/parquet_schema_evolution.q
 index e767b8186e..00cad9ef92 100644
 --- ql/src/test/queries/clientpositive/parquet_schema_evolution.q
@@ -13708,6 +14341,15 @@ index ba4ec17eb4..4cf3632d7c 100644
  set hive.mapred.mode=nonstrict;
  set hive.optimize.metadataonly=true;
  drop table partition_timestamp2_1;
+diff --git ql/src/test/queries/clientpositive/partition_type_check.q ql/src/test/queries/clientpositive/partition_type_check.q
+index c459eec3fa..081d0a3290 100644
+--- ql/src/test/queries/clientpositive/partition_type_check.q
++++ ql/src/test/queries/clientpositive/partition_type_check.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.mapred.mode=nonstrict;
+ set hive.typecheck.on.insert = true;
+ 
 diff --git ql/src/test/queries/clientpositive/partition_type_in_plan.q ql/src/test/queries/clientpositive/partition_type_in_plan.q
 index 693dd2412a..a92b68a80e 100644
 --- ql/src/test/queries/clientpositive/partition_type_in_plan.q
@@ -14009,10 +14651,11 @@ index e02754496c..8806f2e72a 100644
  set hive.optimize.ppd=true;
  set hive.ppd.remove.duplicatefilters=false;
 diff --git ql/src/test/queries/clientpositive/ppd_gby2.q ql/src/test/queries/clientpositive/ppd_gby2.q
-index 689a0d3bf6..70c57faed1 100644
+index 689a0d3bf6..a824740c4c 100644
 --- ql/src/test/queries/clientpositive/ppd_gby2.q
 +++ ql/src/test/queries/clientpositive/ppd_gby2.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  set hive.optimize.ppd=true;
@@ -14285,6 +14928,24 @@ index 9942063876..0ab756eccd 100644
  -- SORT_QUERY_RESULTS
  
  -- 1. testNoPTFNoWindowing
+diff --git ql/src/test/queries/clientpositive/ptf_rcfile.q ql/src/test/queries/clientpositive/ptf_rcfile.q
+index 501d2a4412..1bed12b536 100644
+--- ql/src/test/queries/clientpositive/ptf_rcfile.q
++++ ql/src/test/queries/clientpositive/ptf_rcfile.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ DROP TABLE part_rc;
+ 
+ CREATE TABLE part_rc( 
+diff --git ql/src/test/queries/clientpositive/ptf_seqfile.q ql/src/test/queries/clientpositive/ptf_seqfile.q
+index ac55714c55..d59665f6be 100644
+--- ql/src/test/queries/clientpositive/ptf_seqfile.q
++++ ql/src/test/queries/clientpositive/ptf_seqfile.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ DROP TABLE part_seq;
+ 
+ CREATE TABLE part_seq( 
 diff --git ql/src/test/queries/clientpositive/ptf_streaming.q ql/src/test/queries/clientpositive/ptf_streaming.q
 index aa70a5c83d..5d7e531800 100644
 --- ql/src/test/queries/clientpositive/ptf_streaming.q
@@ -14304,29 +14965,32 @@ index c962452ffb..8de259d247 100644
  drop table push_or;
  
 diff --git ql/src/test/queries/clientpositive/ql_rewrite_gbtoidx.q ql/src/test/queries/clientpositive/ql_rewrite_gbtoidx.q
-index 240e74e095..3e96273312 100644
+index 240e74e095..36da2892cd 100644
 --- ql/src/test/queries/clientpositive/ql_rewrite_gbtoidx.q
 +++ ql/src/test/queries/clientpositive/ql_rewrite_gbtoidx.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:srcpart
++--! qt:dataset:lineitem
  set hive.stats.dbclass=fs;
  set hive.stats.autogather=true;
  set hive.cbo.enable=false;
 diff --git ql/src/test/queries/clientpositive/ql_rewrite_gbtoidx_cbo_1.q ql/src/test/queries/clientpositive/ql_rewrite_gbtoidx_cbo_1.q
-index 82e67ab5a0..b502c0d6fc 100644
+index 82e67ab5a0..0941493505 100644
 --- ql/src/test/queries/clientpositive/ql_rewrite_gbtoidx_cbo_1.q
 +++ ql/src/test/queries/clientpositive/ql_rewrite_gbtoidx_cbo_1.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:srcpart
++--! qt:dataset:lineitem
  set hive.stats.dbclass=fs;
  set hive.stats.autogather=true;
  set hive.cbo.enable=true;
 diff --git ql/src/test/queries/clientpositive/ql_rewrite_gbtoidx_cbo_2.q ql/src/test/queries/clientpositive/ql_rewrite_gbtoidx_cbo_2.q
-index cfc5b0c4b8..0af8e8db65 100644
+index cfc5b0c4b8..14197f41cf 100644
 --- ql/src/test/queries/clientpositive/ql_rewrite_gbtoidx_cbo_2.q
 +++ ql/src/test/queries/clientpositive/ql_rewrite_gbtoidx_cbo_2.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:lineitem
  set hive.stats.dbclass=fs;
  set hive.stats.autogather=true;
  set hive.cbo.enable=true;
@@ -14466,11 +15130,12 @@ index 5fd94e79de..ca1ba4af28 100644
  
  CREATE table columnTable (key STRING, value STRING)
 diff --git ql/src/test/queries/clientpositive/rcfile_createas1.q ql/src/test/queries/clientpositive/rcfile_createas1.q
-index 200c0ec6cb..54d14bd460 100644
+index 200c0ec6cb..eb017e3e61 100644
 --- ql/src/test/queries/clientpositive/rcfile_createas1.q
 +++ ql/src/test/queries/clientpositive/rcfile_createas1.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  set hive.merge.rcfile.block.level=true;
  set mapred.max.split.size=100;
@@ -14493,11 +15158,12 @@ index a6d39c48f9..9de7dd52aa 100644
  
  CREATE table rcfileTableLazyDecompress (key STRING, value STRING) STORED AS RCFile;
 diff --git ql/src/test/queries/clientpositive/rcfile_merge1.q ql/src/test/queries/clientpositive/rcfile_merge1.q
-index 1f6f1bd251..3a793db9b1 100644
+index 1f6f1bd251..d72cfa3440 100644
 --- ql/src/test/queries/clientpositive/rcfile_merge1.q
 +++ ql/src/test/queries/clientpositive/rcfile_merge1.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.merge.rcfile.block.level=false;
  set hive.exec.dynamic.partition=true;
  set mapred.max.split.size=100;
@@ -14676,29 +15342,32 @@ index a211cfaf48..96daf9d658 100644
 -SHOW TABLES;
 +SHOW TABLES LIKE "kv_rename_*";
 diff --git ql/src/test/queries/clientpositive/rename_external_partition_location.q ql/src/test/queries/clientpositive/rename_external_partition_location.q
-index 44500d3fdf..13d172ddd3 100644
+index 44500d3fdf..d9625e970e 100644
 --- ql/src/test/queries/clientpositive/rename_external_partition_location.q
 +++ ql/src/test/queries/clientpositive/rename_external_partition_location.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  
  dfs ${system:test.dfs.mkdir} ${system:test.tmp.dir}/ex_table;
 diff --git ql/src/test/queries/clientpositive/rename_partition_location.q ql/src/test/queries/clientpositive/rename_partition_location.q
-index 583c10a4ee..02feefc64c 100644
+index 583c10a4ee..09114d6705 100644
 --- ql/src/test/queries/clientpositive/rename_partition_location.q
 +++ ql/src/test/queries/clientpositive/rename_partition_location.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  -- This test verifies that if the tables location changes, renaming a partition will not change
  -- the partition location accordingly
  
 diff --git ql/src/test/queries/clientpositive/rename_table_location.q ql/src/test/queries/clientpositive/rename_table_location.q
-index a2103ee6bc..fda7a47cb3 100644
+index a2103ee6bc..1523dbb57b 100644
 --- ql/src/test/queries/clientpositive/rename_table_location.q
 +++ ql/src/test/queries/clientpositive/rename_table_location.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  -- This test verifies that if the tables location changes, renaming a table will not change
  -- the table location scheme
  
@@ -14712,13 +15381,14 @@ index 8e5766cc14..c220d44820 100644
  set hive.metastore.try.direct.sql=true;
  
 diff --git ql/src/test/queries/clientpositive/results_cache_1.q ql/src/test/queries/clientpositive/results_cache_1.q
-index 4aea60e1e5..aa53cd97c5 100644
+index 4aea60e1e5..b4149fd778 100644
 --- ql/src/test/queries/clientpositive/results_cache_1.q
 +++ ql/src/test/queries/clientpositive/results_cache_1.q
-@@ -1,3 +1,6 @@
+@@ -1,3 +1,7 @@
 +--! qt:dataset:src
 +--! qt:dataset:cbo_t3
 +--! qt:dataset:cbo_t2
++--! qt:dataset:cbo_t1
  
  set hive.query.results.cache.enabled=true;
  
@@ -14935,23 +15605,358 @@ index b523f06396..cb80ef4e11 100644
  set hive.mapred.mode=nonstrict;
  set hive.exec.submitviachild=false;
  set hive.exec.submit.local.task.via.child=false;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_acid_part.q ql/src/test/queries/clientpositive/schema_evol_orc_acid_part.q
+index e2e356ef79..df526964c3 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_acid_part.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_acid_part.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_acid_part_llap_io.q ql/src/test/queries/clientpositive/schema_evol_orc_acid_part_llap_io.q
+index 1e5f69b98f..3d13f7690c 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_acid_part_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_acid_part_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
 diff --git ql/src/test/queries/clientpositive/schema_evol_orc_acid_part_update.q ql/src/test/queries/clientpositive/schema_evol_orc_acid_part_update.q
-index b58bb567de..6ff7c7e07a 100644
+index b58bb567de..70f8cc9b7e 100644
 --- ql/src/test/queries/clientpositive/schema_evol_orc_acid_part_update.q
 +++ ql/src/test/queries/clientpositive/schema_evol_orc_acid_part_update.q
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,6 @@
 +--! qt:dataset:srcbucket
++--! qt:dataset:part
 +--! qt:dataset:alltypesorc
  set hive.explain.user=false;
  set hive.fetch.task.conversion=none;
  set hive.mapred.mode=nonstrict;
 diff --git ql/src/test/queries/clientpositive/schema_evol_orc_acid_part_update_llap_io.q ql/src/test/queries/clientpositive/schema_evol_orc_acid_part_update_llap_io.q
-index 2f825832bd..e8f9acc8b5 100644
+index 2f825832bd..0d528ea6d4 100644
 --- ql/src/test/queries/clientpositive/schema_evol_orc_acid_part_update_llap_io.q
 +++ ql/src/test/queries/clientpositive/schema_evol_orc_acid_part_update_llap_io.q
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,6 @@
 +--! qt:dataset:srcbucket
++--! qt:dataset:part
 +--! qt:dataset:alltypesorc
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_acidvec_part.q ql/src/test/queries/clientpositive/schema_evol_orc_acidvec_part.q
+index fb863927fa..d84f47674e 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_acidvec_part.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_acidvec_part.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_acidvec_part_llap_io.q ql/src/test/queries/clientpositive/schema_evol_orc_acidvec_part_llap_io.q
+index 7509d3d6f2..a632855b87 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_acidvec_part_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_acidvec_part_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_acidvec_part_update.q ql/src/test/queries/clientpositive/schema_evol_orc_acidvec_part_update.q
+index aba65c9a55..760deb4725 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_acidvec_part_update.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_acidvec_part_update.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_acidvec_part_update_llap_io.q ql/src/test/queries/clientpositive/schema_evol_orc_acidvec_part_update_llap_io.q
+index 6191d3406a..3ece4773d6 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_acidvec_part_update_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_acidvec_part_update_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part.q ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part.q
+index c4acf27db9..c15792e7b9 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_all_complex.q ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_all_complex.q
+index 614a5be0ca..76e2f57ae9 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_all_complex.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_all_complex.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_all_complex_llap_io.q ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_all_complex_llap_io.q
+index c401b251e9..a2800b521e 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_all_complex_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_all_complex_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_all_primitive.q ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_all_primitive.q
+index c2d83086b7..336a9ad0d3 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_all_primitive.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_all_primitive.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_all_primitive_llap_io.q ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_all_primitive_llap_io.q
+index a91fcef10b..b1b414d030 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_all_primitive_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_all_primitive_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_llap_io.q ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_llap_io.q
+index bb9bb01e64..52f10e1050 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_nonvec_part_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_vec_part.q ql/src/test/queries/clientpositive/schema_evol_orc_vec_part.q
+index d8148700f3..d401679fa6 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_vec_part.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_vec_part.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_all_complex.q ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_all_complex.q
+index bff7cca888..91b3c4efe9 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_all_complex.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_all_complex.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_all_complex_llap_io.q ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_all_complex_llap_io.q
+index af6129e15b..d79bc826b8 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_all_complex_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_all_complex_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_all_primitive.q ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_all_primitive.q
+index 76ab011f87..552c25d656 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_all_primitive.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_all_primitive.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_all_primitive_llap_io.q ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_all_primitive_llap_io.q
+index d7eb636cab..2132cfa758 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_all_primitive_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_all_primitive_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_llap_io.q ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_llap_io.q
+index 52535dd89f..99782277bf 100644
+--- ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_orc_vec_part_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_stats.q ql/src/test/queries/clientpositive/schema_evol_stats.q
+index 210146b4d9..6a5688a216 100644
+--- ql/src/test/queries/clientpositive/schema_evol_stats.q
++++ ql/src/test/queries/clientpositive/schema_evol_stats.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.mapred.mode=nonstrict;
+ SET hive.exec.schema.evolution=true;
+ set hive.llap.io.enabled=false;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part.q ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part.q
+index 6746fae0d9..159f326de3 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_all_complex.q ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_all_complex.q
+index 7c846e7b9d..c444246d3a 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_all_complex.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_all_complex.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_all_complex_llap_io.q ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_all_complex_llap_io.q
+index c679ea992f..0bc9f83f30 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_all_complex_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_all_complex_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_all_primitive.q ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_all_primitive.q
+index 3f2f9ed020..5d91055459 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_all_primitive.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_all_primitive.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_all_primitive_llap_io.q ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_all_primitive_llap_io.q
+index 4bd2f30338..93494c0fbb 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_all_primitive_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_all_primitive_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_llap_io.q ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_llap_io.q
+index ca2cfda01c..821f8cfe17 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_nonvec_part_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_vec_part.q ql/src/test/queries/clientpositive/schema_evol_text_vec_part.q
+index 0b322b02af..142ab28780 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_vec_part.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_vec_part.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_vec_part_all_complex.q ql/src/test/queries/clientpositive/schema_evol_text_vec_part_all_complex.q
+index 131a1af262..dc870bee76 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_vec_part_all_complex.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_vec_part_all_complex.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_vec_part_all_complex_llap_io.q ql/src/test/queries/clientpositive/schema_evol_text_vec_part_all_complex_llap_io.q
+index c19d32df27..8e0c780875 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_vec_part_all_complex_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_vec_part_all_complex_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_vec_part_all_primitive.q ql/src/test/queries/clientpositive/schema_evol_text_vec_part_all_primitive.q
+index 2448268eae..b86423beb4 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_vec_part_all_primitive.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_vec_part_all_primitive.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_vec_part_all_primitive_llap_io.q ql/src/test/queries/clientpositive/schema_evol_text_vec_part_all_primitive_llap_io.q
+index e72c7491bc..b64ed2d269 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_vec_part_all_primitive_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_vec_part_all_primitive_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_vec_part_llap_io.q ql/src/test/queries/clientpositive/schema_evol_text_vec_part_llap_io.q
+index 4cd3ad7337..4cf867c49c 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_vec_part_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_vec_part_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part.q ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part.q
+index 0ab1f33caf..06685139c8 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_all_complex.q ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_all_complex.q
+index b4a9d664e2..55163c8297 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_all_complex.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_all_complex.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_all_complex_llap_io.q ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_all_complex_llap_io.q
+index 6368d82dbe..09f06d377d 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_all_complex_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_all_complex_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_all_primitive.q ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_all_primitive.q
+index 83fc17397e..d9ff65e3b3 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_all_primitive.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_all_primitive.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_all_primitive_llap_io.q ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_all_primitive_llap_io.q
+index a191d79d01..28885c8e45 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_all_primitive_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_all_primitive_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.explain.user=false;
+ set hive.fetch.task.conversion=none;
+ set hive.mapred.mode=nonstrict;
+diff --git ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_llap_io.q ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_llap_io.q
+index 4a91a95844..201795528f 100644
+--- ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_llap_io.q
++++ ql/src/test/queries/clientpositive/schema_evol_text_vecrow_part_llap_io.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
  set hive.explain.user=false;
  set hive.fetch.task.conversion=none;
  set hive.mapred.mode=nonstrict;
@@ -15030,10 +16035,11 @@ index 3168531d0c..05542ce96a 100644
  set hive.explain.user=false;
  -- SORT_QUERY_RESULTS
 diff --git ql/src/test/queries/clientpositive/select_as_omitted.q ql/src/test/queries/clientpositive/select_as_omitted.q
-index f0fe03f180..843cb83986 100644
+index f0fe03f180..aa3a31cf24 100644
 --- ql/src/test/queries/clientpositive/select_as_omitted.q
 +++ ql/src/test/queries/clientpositive/select_as_omitted.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  EXPLAIn
  SELECT a, b FROM (
@@ -15184,6 +16190,15 @@ index a378456494..42b74677bd 100644
  -- Test SHOW CREATE TABLE on a view name.
  
  CREATE VIEW tmp_copy_src AS SELECT * FROM src;
+diff --git ql/src/test/queries/clientpositive/show_partitions.q ql/src/test/queries/clientpositive/show_partitions.q
+index 5b746e6a24..d22c483fea 100644
+--- ql/src/test/queries/clientpositive/show_partitions.q
++++ ql/src/test/queries/clientpositive/show_partitions.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:srcpart
+ SHOW PARTITIONS srcpart;
+ SHOW PARTITIONS default.srcpart;
+ SHOW PARTITIONS srcpart PARTITION(hr='11');
 diff --git ql/src/test/queries/clientpositive/show_tables.q ql/src/test/queries/clientpositive/show_tables.q
 index 447f9a84e3..619065711d 100644
 --- ql/src/test/queries/clientpositive/show_tables.q
@@ -15199,14 +16214,24 @@ index 447f9a84e3..619065711d 100644
  SHOW TABLES IN test_db LIKE "nomatch";
  
 diff --git ql/src/test/queries/clientpositive/show_tablestatus.q ql/src/test/queries/clientpositive/show_tablestatus.q
-index 55fb7b67ff..e6b3375185 100644
+index 55fb7b67ff..d8f04ec30d 100644
 --- ql/src/test/queries/clientpositive/show_tablestatus.q
 +++ ql/src/test/queries/clientpositive/show_tablestatus.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:srcpart
 +--! qt:dataset:src
  set hive.support.quoted.identifiers=none;
  EXPLAIN 
  SHOW TABLE EXTENDED IN default LIKE `src`;
+diff --git ql/src/test/queries/clientpositive/showparts.q ql/src/test/queries/clientpositive/showparts.q
+index dbee3efc24..ea28669c90 100644
+--- ql/src/test/queries/clientpositive/showparts.q
++++ ql/src/test/queries/clientpositive/showparts.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:srcpart
+ EXPLAIN
+ SHOW PARTITIONS srcpart; 
+ 
 diff --git ql/src/test/queries/clientpositive/skewjoin.q ql/src/test/queries/clientpositive/skewjoin.q
 index e4b178a1e3..9972eddebe 100644
 --- ql/src/test/queries/clientpositive/skewjoin.q
@@ -15263,11 +16288,12 @@ index 6cba8ea9e8..728ec157e7 100644
  set hive.optimize.bucketmapjoin.sortedmerge = true;
  set hive.input.format = org.apache.hadoop.hive.ql.io.BucketizedHiveInputFormat;
 diff --git ql/src/test/queries/clientpositive/smb_mapjoin_14.q ql/src/test/queries/clientpositive/smb_mapjoin_14.q
-index f0b0e6e7ad..4b0818715d 100644
+index f0b0e6e7ad..25457d5744 100644
 --- ql/src/test/queries/clientpositive/smb_mapjoin_14.q
 +++ ql/src/test/queries/clientpositive/smb_mapjoin_14.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  set hive.exec.reducers.max = 1;
  
@@ -15416,29 +16442,32 @@ index 3b23304413..494168d3b4 100644
  drop table table_desc2;
  
 diff --git ql/src/test/queries/clientpositive/sort_merge_join_desc_5.q ql/src/test/queries/clientpositive/sort_merge_join_desc_5.q
-index 5be80b43e6..e8c51735c7 100644
+index 5be80b43e6..fbe8e5ba93 100644
 --- ql/src/test/queries/clientpositive/sort_merge_join_desc_5.q
 +++ ql/src/test/queries/clientpositive/sort_merge_join_desc_5.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  
  set hive.cbo.enable=false;
  
 diff --git ql/src/test/queries/clientpositive/sort_merge_join_desc_6.q ql/src/test/queries/clientpositive/sort_merge_join_desc_6.q
-index 0c0422f0a2..28b60c254d 100644
+index 0c0422f0a2..7d4dfdf0a6 100644
 --- ql/src/test/queries/clientpositive/sort_merge_join_desc_6.q
 +++ ql/src/test/queries/clientpositive/sort_merge_join_desc_6.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  
  
  set hive.exec.reducers.max = 1;
 diff --git ql/src/test/queries/clientpositive/sort_merge_join_desc_7.q ql/src/test/queries/clientpositive/sort_merge_join_desc_7.q
-index 3be7c2da66..5dc6fa000c 100644
+index 3be7c2da66..8b65854065 100644
 --- ql/src/test/queries/clientpositive/sort_merge_join_desc_7.q
 +++ ql/src/test/queries/clientpositive/sort_merge_join_desc_7.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  
  
  set hive.exec.reducers.max = 1;
@@ -15599,12 +16628,16 @@ index 0de55ce493..47c826adba 100644
  set hive.ppd.remove.duplicatefilters=true;
  set hive.spark.dynamic.partition.pruning=true;
 diff --git ql/src/test/queries/clientpositive/special_character_in_tabnames_1.q ql/src/test/queries/clientpositive/special_character_in_tabnames_1.q
-index adc23e99b3..e5caff8ccf 100644
+index adc23e99b3..67ba28db8f 100644
 --- ql/src/test/queries/clientpositive/special_character_in_tabnames_1.q
 +++ ql/src/test/queries/clientpositive/special_character_in_tabnames_1.q
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,9 @@
 +--! qt:dataset:src1
 +--! qt:dataset:src
++--! qt:dataset:lineitem
++--! qt:dataset:cbo_t3
++--! qt:dataset:cbo_t2
++--! qt:dataset:cbo_t1
  set hive.cbo.enable=true;
  set hive.exec.check.crossproducts=false;
  set hive.stats.fetch.column.stats=true;
@@ -15776,20 +16809,22 @@ index 8b6a7d90cc..6e4410f163 100644
  SET hive.explain.user=false;
  SET hive.stats.fetch.column.stats=false;
 diff --git ql/src/test/queries/clientpositive/stats_empty_dyn_part.q ql/src/test/queries/clientpositive/stats_empty_dyn_part.q
-index 38ee6f7f4f..313643cde1 100644
+index 38ee6f7f4f..bcb657acbd 100644
 --- ql/src/test/queries/clientpositive/stats_empty_dyn_part.q
 +++ ql/src/test/queries/clientpositive/stats_empty_dyn_part.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  -- This test verifies writing a query using dynamic partitions
  -- which results in no partitions actually being created with
  -- hive.stats.reliable set to true
 diff --git ql/src/test/queries/clientpositive/stats_empty_partition.q ql/src/test/queries/clientpositive/stats_empty_partition.q
-index 305a97c929..f82b6dbf1d 100644
+index 305a97c929..8fb941e354 100644
 --- ql/src/test/queries/clientpositive/stats_empty_partition.q
 +++ ql/src/test/queries/clientpositive/stats_empty_partition.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  -- This test verifies that writing an empty partition succeeds when
  -- hive.stats.reliable is set to true.
  
@@ -15921,10 +16956,11 @@ index 91290c4d85..de68c8aa29 100644
  set hive.auto.convert.join=true;
  set hive.auto.convert.join.noconditionaltask.size=10000000;
 diff --git ql/src/test/queries/clientpositive/subquery_alias.q ql/src/test/queries/clientpositive/subquery_alias.q
-index fcdb64ce00..9ed40be30f 100644
+index fcdb64ce00..fdffa88a2f 100644
 --- ql/src/test/queries/clientpositive/subquery_alias.q
 +++ ql/src/test/queries/clientpositive/subquery_alias.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  EXPLAIN
@@ -16132,6 +17168,15 @@ index d3e9ea58df..682fd68586 100644
  set hive.mapred.mode=nonstrict;
  
  select 
+diff --git ql/src/test/queries/clientpositive/sysdb.q ql/src/test/queries/clientpositive/sysdb.q
+index 36d80e2782..3e0ce9f377 100644
+--- ql/src/test/queries/clientpositive/sysdb.q
++++ ql/src/test/queries/clientpositive/sysdb.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:alltypesorc
+ set hive.strict.checks.cartesian.product=false;
+ 
+ set hive.compute.query.using.stats=false;
 diff --git ql/src/test/queries/clientpositive/tablename_with_select.q ql/src/test/queries/clientpositive/tablename_with_select.q
 index e4aee3c3cd..85c3b4cb02 100644
 --- ql/src/test/queries/clientpositive/tablename_with_select.q
@@ -16333,6 +17378,15 @@ index 158c99b339..c5818958a2 100644
  set hive.mapred.mode=nonstrict;
  set hive.explain.user=false;
  -- SORT_QUERY_RESULTS
+diff --git ql/src/test/queries/clientpositive/tez_join_result_complex.q ql/src/test/queries/clientpositive/tez_join_result_complex.q
+index 42c55063c2..cef8dc7d4e 100644
+--- ql/src/test/queries/clientpositive/tez_join_result_complex.q
++++ ql/src/test/queries/clientpositive/tez_join_result_complex.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:src
+ SET hive.auto.convert.join=true;
+ SET hive.auto.convert.join.noconditionaltask=true;
+ SET hive.auto.convert.join.noconditionaltask.size=1000000000;
 diff --git ql/src/test/queries/clientpositive/tez_join_tests.q ql/src/test/queries/clientpositive/tez_join_tests.q
 index 9a6280571c..bc57af5da3 100644
 --- ql/src/test/queries/clientpositive/tez_join_tests.q
@@ -16554,38 +17608,42 @@ index ddbc567596..3188ab02be 100644
  -- Transform with a function that has many parameters
  SELECT TRANSFORM(substr(key, 1, 2)) USING 'cat' FROM src LIMIT 1;
 diff --git ql/src/test/queries/clientpositive/transform_acid.q ql/src/test/queries/clientpositive/transform_acid.q
-index c890ef8e41..f6cba91cd0 100644
+index c890ef8e41..c55ed43b38 100644
 --- ql/src/test/queries/clientpositive/transform_acid.q
 +++ ql/src/test/queries/clientpositive/transform_acid.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src
 +--! qt:dataset:alltypesorc
  set hive.entity.capture.transform=true;
  set hive.support.concurrency=true;
  set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
 diff --git ql/src/test/queries/clientpositive/transform_ppr1.q ql/src/test/queries/clientpositive/transform_ppr1.q
-index 5d0a48ba58..972919b59c 100644
+index 5d0a48ba58..dc7884bff5 100644
 --- ql/src/test/queries/clientpositive/transform_ppr1.q
 +++ ql/src/test/queries/clientpositive/transform_ppr1.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:srcpart
++--! qt:dataset:src
  set hive.mapred.mode=nonstrict;
  set hive.optimize.ppd=true;
  set hive.entity.capture.transform=true;
 diff --git ql/src/test/queries/clientpositive/transform_ppr2.q ql/src/test/queries/clientpositive/transform_ppr2.q
-index 6dbaca1c82..8fc8597842 100644
+index 6dbaca1c82..51d154ac0b 100644
 --- ql/src/test/queries/clientpositive/transform_ppr2.q
 +++ ql/src/test/queries/clientpositive/transform_ppr2.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:srcpart
++--! qt:dataset:src
  set hive.optimize.ppd=true;
  set hive.entity.capture.transform=true;
  
 diff --git ql/src/test/queries/clientpositive/truncate_column.q ql/src/test/queries/clientpositive/truncate_column.q
-index 4cfa180a1e..b7113de360 100644
+index 4cfa180a1e..1e29b55001 100644
 --- ql/src/test/queries/clientpositive/truncate_column.q
 +++ ql/src/test/queries/clientpositive/truncate_column.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  -- Tests truncating column(s) from a table, also tests that stats are updated
  
@@ -16599,11 +17657,12 @@ index c51a98f081..241bd25270 100644
  -- Tests truncating columns from a bucketed table, table should remain bucketed
  
 diff --git ql/src/test/queries/clientpositive/truncate_column_list_bucket.q ql/src/test/queries/clientpositive/truncate_column_list_bucket.q
-index 476120a449..433e84f5a8 100644
+index 476120a449..44f580652f 100644
 --- ql/src/test/queries/clientpositive/truncate_column_list_bucket.q
 +++ ql/src/test/queries/clientpositive/truncate_column_list_bucket.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.mapred.mode=nonstrict;
  set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
  set hive.merge.mapfiles=false;	
@@ -17418,6 +18477,15 @@ index 28a9b10880..ab52af0dbc 100644
  set hive.fetch.task.conversion=more;
  
  DESCRIBE FUNCTION mod;
+diff --git ql/src/test/queries/clientpositive/udf_months_between.q ql/src/test/queries/clientpositive/udf_months_between.q
+index dcc0fc658d..8465e5ea25 100644
+--- ql/src/test/queries/clientpositive/udf_months_between.q
++++ ql/src/test/queries/clientpositive/udf_months_between.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ describe function months_between;
+ desc function extended months_between;
+ 
 diff --git ql/src/test/queries/clientpositive/udf_named_struct.q ql/src/test/queries/clientpositive/udf_named_struct.q
 index ad6fd7a021..193c62c5b8 100644
 --- ql/src/test/queries/clientpositive/udf_named_struct.q
@@ -18523,6 +19591,15 @@ index 17ce742738..15c9d64699 100644
  set hive.mapred.mode=nonstrict;
  set hive.support.concurrency=true;
  set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
+diff --git ql/src/test/queries/clientpositive/update_orig_table.q ql/src/test/queries/clientpositive/update_orig_table.q
+index f68b82de49..750b034e10 100644
+--- ql/src/test/queries/clientpositive/update_orig_table.q
++++ ql/src/test/queries/clientpositive/update_orig_table.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:alltypesorc
+ set hive.support.concurrency=true;
+ set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
+ 
 diff --git ql/src/test/queries/clientpositive/update_tmp_table.q ql/src/test/queries/clientpositive/update_tmp_table.q
 index 6a6e11d82f..4672973d5a 100644
 --- ql/src/test/queries/clientpositive/update_tmp_table.q
@@ -18632,12 +19709,13 @@ index ab65e9d9da..6a27031c73 100644
  set hive.fetch.task.conversion=none;
  SET hive.auto.convert.join=true;
 diff --git ql/src/test/queries/clientpositive/vector_auto_smb_mapjoin_14.q ql/src/test/queries/clientpositive/vector_auto_smb_mapjoin_14.q
-index 81d6541674..98c2432cd7 100644
+index 81d6541674..ed25756e06 100644
 --- ql/src/test/queries/clientpositive/vector_auto_smb_mapjoin_14.q
 +++ ql/src/test/queries/clientpositive/vector_auto_smb_mapjoin_14.q
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,6 @@
 +--! qt:dataset:src1
 +--! qt:dataset:src
++--! qt:dataset:part
  set hive.stats.column.autogather=false;
  set hive.mapred.mode=nonstrict;
  set hive.explain.user=false;
@@ -18650,6 +19728,15 @@ index b87d646bc7..bbf2ec7afb 100644
  set hive.mapred.mode=nonstrict;
  set hive.explain.user=false;
  SET hive.vectorized.execution.enabled=true;
+diff --git ql/src/test/queries/clientpositive/vector_case_when_1.q ql/src/test/queries/clientpositive/vector_case_when_1.q
+index f081efb1ec..0ba17da47e 100644
+--- ql/src/test/queries/clientpositive/vector_case_when_1.q
++++ ql/src/test/queries/clientpositive/vector_case_when_1.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:lineitem
+ set hive.cli.print.header=true;
+ set hive.mapred.mode=nonstrict;
+ set hive.explain.user=false;
 diff --git ql/src/test/queries/clientpositive/vector_char_2.q ql/src/test/queries/clientpositive/vector_char_2.q
 index d3a2e93ce4..02062d5b20 100644
 --- ql/src/test/queries/clientpositive/vector_char_2.q
@@ -18678,6 +19765,16 @@ index 11296e16ce..1689561af8 100644
  set hive.stats.fetch.column.stats=true;
  set hive.explain.user=false;
  SET hive.vectorized.execution.enabled=true;
+diff --git ql/src/test/queries/clientpositive/vector_complex_all.q ql/src/test/queries/clientpositive/vector_complex_all.q
+index 920210f751..e223c8efdc 100644
+--- ql/src/test/queries/clientpositive/vector_complex_all.q
++++ ql/src/test/queries/clientpositive/vector_complex_all.q
+@@ -1,3 +1,5 @@
++--! qt:dataset:src1
++--! qt:dataset:src
+ set hive.compute.query.using.stats=false;
+ set hive.strict.checks.cartesian.product=false;
+ set hive.cli.print.header=true;
 diff --git ql/src/test/queries/clientpositive/vector_complex_join.q ql/src/test/queries/clientpositive/vector_complex_join.q
 index dbdc36a112..9316378d91 100644
 --- ql/src/test/queries/clientpositive/vector_complex_join.q
@@ -19361,10 +20458,11 @@ index 8acb1930f0..73970d1240 100644
  set hive.explain.user=false;
  SET hive.vectorized.execution.enabled=true;
 diff --git ql/src/test/queries/clientpositive/vectorization_short_regress.q ql/src/test/queries/clientpositive/vectorization_short_regress.q
-index 03e4bbcb59..50d943b403 100644
+index 03e4bbcb59..e2e858216c 100644
 --- ql/src/test/queries/clientpositive/vectorization_short_regress.q
 +++ ql/src/test/queries/clientpositive/vectorization_short_regress.q
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++--! qt:dataset:src
 +--! qt:dataset:alltypesorc
  set hive.compute.query.using.stats=false;
  set hive.mapred.mode=nonstrict;
@@ -19405,6 +20503,15 @@ index 0558bc0ea8..837414321a 100644
  set hive.mapred.mode=nonstrict;
  set hive.explain.user=false;
  set hive.fetch.task.conversion=none;
+diff --git ql/src/test/queries/clientpositive/vectorized_date_funcs.q ql/src/test/queries/clientpositive/vectorized_date_funcs.q
+index 4d56198e94..e26a54c6ad 100644
+--- ql/src/test/queries/clientpositive/vectorized_date_funcs.q
++++ ql/src/test/queries/clientpositive/vectorized_date_funcs.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:part
+ set hive.mapred.mode=nonstrict;
+ set hive.explain.user=false;
+ SET hive.vectorized.execution.enabled = true;
 diff --git ql/src/test/queries/clientpositive/vectorized_distinct_gby.q ql/src/test/queries/clientpositive/vectorized_distinct_gby.q
 index 44a06f57fc..a64a60718f 100644
 --- ql/src/test/queries/clientpositive/vectorized_distinct_gby.q
@@ -19672,10 +20779,11 @@ index b813657bae..e2a6e6d236 100644
  create temporary function mysum as 'org.apache.hadoop.hive.ql.udf.generic.GenericUDAFSum';
  
 diff --git ql/src/test/queries/negative/ambiguous_join_col.q ql/src/test/queries/negative/ambiguous_join_col.q
-index e70aae4627..3c9eef55f0 100644
+index e70aae4627..ff4ba0f3d8 100644
 --- ql/src/test/queries/negative/ambiguous_join_col.q
 +++ ql/src/test/queries/negative/ambiguous_join_col.q
-@@ -1,2 +1,3 @@
+@@ -1,2 +1,4 @@
++--! qt:dataset:src1
 +--! qt:dataset:src
  FROM src src1 JOIN src src2 ON src1.key = src2.key
  INSERT OVERWRITE TABLE dest1 SELECT key
@@ -19839,6 +20947,14 @@ index cfe70e4f2f..0e13f90387 100644
 +--! qt:dataset:src
  FROM src
  INSERT OVERWRITE TABLE dest1 SELECT '1234', dummyfn(src.key) WHERE src.key < 100 group by src.key
+diff --git ql/src/test/queries/negative/unknown_table1.q ql/src/test/queries/negative/unknown_table1.q
+index 585ef6d7f2..f1aa4ae15a 100644
+--- ql/src/test/queries/negative/unknown_table1.q
++++ ql/src/test/queries/negative/unknown_table1.q
+@@ -1,2 +1,3 @@
++--! qt:dataset:src
+ FROM dummySrc
+ INSERT OVERWRITE TABLE dest1 SELECT '1234', src.value WHERE src.key < 100
 diff --git ql/src/test/queries/negative/unknown_table2.q ql/src/test/queries/negative/unknown_table2.q
 index 2c69c16be5..49ad972af6 100644
 --- ql/src/test/queries/negative/unknown_table2.q
@@ -20431,6 +21547,13 @@ index 663a8bb0ce..3af1a8a710 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10004]: Line 3:113 Invalid table alias or column reference 'po': (possible column names are: p_partkey, p_name, p_mfgr, p_brand, p_type, p_size, p_container, p_retailprice, p_comment)
 +FAILED: SemanticException [Error 10004]: Line 4:113 Invalid table alias or column reference 'po': (possible column names are: p_partkey, p_name, p_mfgr, p_brand, p_type, p_size, p_container, p_retailprice, p_comment)
+diff --git ql/src/test/results/clientnegative/subquery_corr_grandparent.q.out ql/src/test/results/clientnegative/subquery_corr_grandparent.q.out
+index 4bc7c64ded..6f06fc71b0 100644
+--- ql/src/test/results/clientnegative/subquery_corr_grandparent.q.out
++++ ql/src/test/results/clientnegative/subquery_corr_grandparent.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10004]: Line 4:95 Invalid table alias or column reference 'x': (possible column names are: p_partkey, p_name, p_mfgr, p_brand, p_type, p_size, p_container, p_retailprice, p_comment)
++FAILED: SemanticException [Error 10004]: Line 5:95 Invalid table alias or column reference 'x': (possible column names are: p_partkey, p_name, p_mfgr, p_brand, p_type, p_size, p_container, p_retailprice, p_comment)
 diff --git ql/src/test/results/clientnegative/subquery_corr_select.q.out ql/src/test/results/clientnegative/subquery_corr_select.q.out
 index 1f3dbb71f3..d95b9397cf 100644
 --- ql/src/test/results/clientnegative/subquery_corr_select.q.out
@@ -20466,6 +21589,13 @@ index e08b86cef0..45425089a4 100644
 @@ -1 +1 @@
 -FAILED: ParseException line 5:39 missing EOF at 'in' near ')'
 +FAILED: ParseException line 6:39 missing EOF at 'in' near ')'
+diff --git ql/src/test/results/clientnegative/subquery_subquery_chain_exists.q.out ql/src/test/results/clientnegative/subquery_subquery_chain_exists.q.out
+index 9b5212be98..9b957e61aa 100644
+--- ql/src/test/results/clientnegative/subquery_subquery_chain_exists.q.out
++++ ql/src/test/results/clientnegative/subquery_subquery_chain_exists.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10249]: org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException: Line 4:7 Unsupported SubQuery Expression 'key': IN/NOT IN subqueries are not allowed in LHS
++FAILED: SemanticException [Error 10249]: org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException: Line 5:7 Unsupported SubQuery Expression 'key': IN/NOT IN subqueries are not allowed in LHS
 diff --git ql/src/test/results/clientnegative/subquery_windowing_corr.q.out ql/src/test/results/clientnegative/subquery_windowing_corr.q.out
 index daac4bb3c3..f42e064b32 100644
 --- ql/src/test/results/clientnegative/subquery_windowing_corr.q.out
@@ -20487,6 +21617,27 @@ index 00cb3ed275..ac37300613 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10016]: Line 2:22 Argument type mismatch '1': "array" expected at function ARRAY_CONTAINS, but "int" is found
 +FAILED: SemanticException [Error 10016]: Line 3:22 Argument type mismatch '1': "array" expected at function ARRAY_CONTAINS, but "int" is found
+diff --git ql/src/test/results/clientnegative/udf_array_contains_wrong2.q.out ql/src/test/results/clientnegative/udf_array_contains_wrong2.q.out
+index 507d322d86..dafdd0ee27 100644
+--- ql/src/test/results/clientnegative/udf_array_contains_wrong2.q.out
++++ ql/src/test/results/clientnegative/udf_array_contains_wrong2.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 2:38 Argument type mismatch ''2'': "int" expected at function ARRAY_CONTAINS, but "string" is found
++FAILED: SemanticException [Error 10016]: Line 3:38 Argument type mismatch ''2'': "int" expected at function ARRAY_CONTAINS, but "string" is found
+diff --git ql/src/test/results/clientnegative/udf_coalesce.q.out ql/src/test/results/clientnegative/udf_coalesce.q.out
+index 249a83dcfd..1adf1401a2 100644
+--- ql/src/test/results/clientnegative/udf_coalesce.q.out
++++ ql/src/test/results/clientnegative/udf_coalesce.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 1:33 Argument type mismatch ''2.0'': The expressions after COALESCE should all have the same type: "array<string>" is expected but "string" is found
++FAILED: SemanticException [Error 10016]: Line 2:33 Argument type mismatch ''2.0'': The expressions after COALESCE should all have the same type: "array<string>" is expected but "string" is found
+diff --git ql/src/test/results/clientnegative/udf_concat_ws_wrong1.q.out ql/src/test/results/clientnegative/udf_concat_ws_wrong1.q.out
+index ea31b90826..fa6515cc01 100644
+--- ql/src/test/results/clientnegative/udf_concat_ws_wrong1.q.out
++++ ql/src/test/results/clientnegative/udf_concat_ws_wrong1.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch ''-'': The function CONCAT_WS(separator,[string | array(string)]+) needs at least two arguments.
++FAILED: SemanticException [Error 10015]: Line 3:7 Arguments length mismatch ''-'': The function CONCAT_WS(separator,[string | array(string)]+) needs at least two arguments.
 diff --git ql/src/test/results/clientnegative/udf_concat_ws_wrong2.q.out ql/src/test/results/clientnegative/udf_concat_ws_wrong2.q.out
 index 24edb6a77e..394fca71af 100644
 --- ql/src/test/results/clientnegative/udf_concat_ws_wrong2.q.out
@@ -20494,6 +21645,13 @@ index 24edb6a77e..394fca71af 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10016]: Line 2:23 Argument type mismatch '50': Argument 2 of function CONCAT_WS must be "string or array<string>", but "array<int>" was found.
 +FAILED: SemanticException [Error 10016]: Line 3:23 Argument type mismatch '50': Argument 2 of function CONCAT_WS must be "string or array<string>", but "array<int>" was found.
+diff --git ql/src/test/results/clientnegative/udf_concat_ws_wrong3.q.out ql/src/test/results/clientnegative/udf_concat_ws_wrong3.q.out
+index 3c94167908..50e6454ef6 100644
+--- ql/src/test/results/clientnegative/udf_concat_ws_wrong3.q.out
++++ ql/src/test/results/clientnegative/udf_concat_ws_wrong3.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 2:17 Argument type mismatch '1234': Argument 1 of function CONCAT_WS must be "string or array<string>", but "int" was found.
++FAILED: SemanticException [Error 10016]: Line 3:17 Argument type mismatch '1234': Argument 1 of function CONCAT_WS must be "string or array<string>", but "int" was found.
 diff --git ql/src/test/results/clientnegative/udf_elt_wrong_args_len.q.out ql/src/test/results/clientnegative/udf_elt_wrong_args_len.q.out
 index 53bb57956f..70b5b50218 100644
 --- ql/src/test/results/clientnegative/udf_elt_wrong_args_len.q.out
@@ -20501,6 +21659,13 @@ index 53bb57956f..70b5b50218 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10015]: Line 1:7 Arguments length mismatch '3': The function ELT(N,str1,str2,str3,...) needs at least two arguments.
 +FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch '3': The function ELT(N,str1,str2,str3,...) needs at least two arguments.
+diff --git ql/src/test/results/clientnegative/udf_elt_wrong_type.q.out ql/src/test/results/clientnegative/udf_elt_wrong_type.q.out
+index 33d7a53d76..c5164daa39 100644
+--- ql/src/test/results/clientnegative/udf_elt_wrong_type.q.out
++++ ql/src/test/results/clientnegative/udf_elt_wrong_type.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 2:14 Argument type mismatch 'lintstring': The 2nd argument of function ELT is expected to a primitive type, but list is found
++FAILED: SemanticException [Error 10016]: Line 3:14 Argument type mismatch 'lintstring': The 2nd argument of function ELT is expected to a primitive type, but list is found
 diff --git ql/src/test/results/clientnegative/udf_field_wrong_args_len.q.out ql/src/test/results/clientnegative/udf_field_wrong_args_len.q.out
 index 5276b44552..81eef73d06 100644
 --- ql/src/test/results/clientnegative/udf_field_wrong_args_len.q.out
@@ -20529,6 +21694,13 @@ index d98854c18e..be49d434b3 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch '3': The function FORMAT_NUMBER(X, D or F) needs two arguments.
 +FAILED: SemanticException [Error 10015]: Line 3:7 Arguments length mismatch '3': The function FORMAT_NUMBER(X, D or F) needs two arguments.
+diff --git ql/src/test/results/clientnegative/udf_format_number_wrong3.q.out ql/src/test/results/clientnegative/udf_format_number_wrong3.q.out
+index 25486e112f..d0f031c145 100644
+--- ql/src/test/results/clientnegative/udf_format_number_wrong3.q.out
++++ ql/src/test/results/clientnegative/udf_format_number_wrong3.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10014]: Line 2:7 Wrong arguments '4': org.apache.hadoop.hive.ql.metadata.HiveException: Argument 2 of function FORMAT_NUMBER must be >= 0, but "-4" was found
++FAILED: SemanticException [Error 10014]: Line 3:7 Wrong arguments '4': org.apache.hadoop.hive.ql.metadata.HiveException: Argument 2 of function FORMAT_NUMBER must be >= 0, but "-4" was found
 diff --git ql/src/test/results/clientnegative/udf_format_number_wrong4.q.out ql/src/test/results/clientnegative/udf_format_number_wrong4.q.out
 index 1536041206..182686dbb6 100644
 --- ql/src/test/results/clientnegative/udf_format_number_wrong4.q.out
@@ -20536,6 +21708,13 @@ index 1536041206..182686dbb6 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10016]: Line 2:35 Argument type mismatch '4.01': Argument 2 of function FORMAT_NUMBER must be "tinyint" or "smallint" or "int" or "bigint" or "string", but "decimal(3,2)" was found.
 +FAILED: SemanticException [Error 10016]: Line 3:35 Argument type mismatch '4.01': Argument 2 of function FORMAT_NUMBER must be "tinyint" or "smallint" or "int" or "bigint" or "string", but "decimal(3,2)" was found.
+diff --git ql/src/test/results/clientnegative/udf_format_number_wrong5.q.out ql/src/test/results/clientnegative/udf_format_number_wrong5.q.out
+index 5db7248978..080dc15dae 100644
+--- ql/src/test/results/clientnegative/udf_format_number_wrong5.q.out
++++ ql/src/test/results/clientnegative/udf_format_number_wrong5.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 2:21 Argument type mismatch '321.23': Argument 1 of function FORMAT_NUMBER must be "tinyint" or "smallint" or "int" or "bigint" or "double" or "float" or "decimal", but "array<decimal(11,6)>" was found.
++FAILED: SemanticException [Error 10016]: Line 3:21 Argument type mismatch '321.23': Argument 1 of function FORMAT_NUMBER must be "tinyint" or "smallint" or "int" or "bigint" or "double" or "float" or "decimal", but "array<decimal(11,6)>" was found.
 diff --git ql/src/test/results/clientnegative/udf_format_number_wrong7.q.out ql/src/test/results/clientnegative/udf_format_number_wrong7.q.out
 index 58704ace34..edc06a2e5c 100644
 --- ql/src/test/results/clientnegative/udf_format_number_wrong7.q.out
@@ -20550,6 +21729,34 @@ index 66a4476894..ce0faa87b3 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10014]: Line 1:7 Wrong arguments ''2.0'': greatest only takes primitive types, got array<string>
 +FAILED: SemanticException [Error 10014]: Line 2:7 Wrong arguments ''2.0'': greatest only takes primitive types, got array<string>
+diff --git ql/src/test/results/clientnegative/udf_greatest_error_2.q.out ql/src/test/results/clientnegative/udf_greatest_error_2.q.out
+index 58b4c440e6..2418ecab49 100644
+--- ql/src/test/results/clientnegative/udf_greatest_error_2.q.out
++++ ql/src/test/results/clientnegative/udf_greatest_error_2.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10015]: Line 1:7 Arguments length mismatch '1': greatest requires at least 2 arguments, got 1
++FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch '1': greatest requires at least 2 arguments, got 1
+diff --git ql/src/test/results/clientnegative/udf_if_not_bool.q.out ql/src/test/results/clientnegative/udf_if_not_bool.q.out
+index 6e3fafe3d9..1a0d6ae6e3 100644
+--- ql/src/test/results/clientnegative/udf_if_not_bool.q.out
++++ ql/src/test/results/clientnegative/udf_if_not_bool.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 1:10 Argument type mismatch ''STRING'': The first argument of function IF should be "boolean", but "string" is found
++FAILED: SemanticException [Error 10016]: Line 2:10 Argument type mismatch ''STRING'': The first argument of function IF should be "boolean", but "string" is found
+diff --git ql/src/test/results/clientnegative/udf_if_wrong_args_len.q.out ql/src/test/results/clientnegative/udf_if_wrong_args_len.q.out
+index dfc6ff3460..463940b0c0 100644
+--- ql/src/test/results/clientnegative/udf_if_wrong_args_len.q.out
++++ ql/src/test/results/clientnegative/udf_if_wrong_args_len.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10015]: Line 1:7 Arguments length mismatch '1': The function IF(expr1,expr2,expr3) accepts exactly 3 arguments.
++FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch '1': The function IF(expr1,expr2,expr3) accepts exactly 3 arguments.
+diff --git ql/src/test/results/clientnegative/udf_instr_wrong_args_len.q.out ql/src/test/results/clientnegative/udf_instr_wrong_args_len.q.out
+index 114746fe86..25df5a5de3 100644
+--- ql/src/test/results/clientnegative/udf_instr_wrong_args_len.q.out
++++ ql/src/test/results/clientnegative/udf_instr_wrong_args_len.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10015]: Line 1:7 Arguments length mismatch ''abcd'': The function INSTR accepts exactly 2 arguments.
++FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch ''abcd'': The function INSTR accepts exactly 2 arguments.
 diff --git ql/src/test/results/clientnegative/udf_instr_wrong_type.q.out ql/src/test/results/clientnegative/udf_instr_wrong_type.q.out
 index 2b2f29fd65..9aa895b4eb 100644
 --- ql/src/test/results/clientnegative/udf_instr_wrong_type.q.out
@@ -20557,6 +21764,20 @@ index 2b2f29fd65..9aa895b4eb 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10016]: Line 2:21 Argument type mismatch 'lintstring': The 2nd argument of function INSTR is expected to a primitive type, but list is found
 +FAILED: SemanticException [Error 10016]: Line 3:21 Argument type mismatch 'lintstring': The 2nd argument of function INSTR is expected to a primitive type, but list is found
+diff --git ql/src/test/results/clientnegative/udf_likeall_wrong1.q.out ql/src/test/results/clientnegative/udf_likeall_wrong1.q.out
+index bf48229aed..a5af901dfd 100644
+--- ql/src/test/results/clientnegative/udf_likeall_wrong1.q.out
++++ ql/src/test/results/clientnegative/udf_likeall_wrong1.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 1:7 Argument type mismatch '120': likeall only takes STRING_GROUP, VOID_GROUP types as 1st argument, got INT
++FAILED: SemanticException [Error 10016]: Line 2:7 Argument type mismatch '120': likeall only takes STRING_GROUP, VOID_GROUP types as 1st argument, got INT
+diff --git ql/src/test/results/clientnegative/udf_likeany_wrong1.q.out ql/src/test/results/clientnegative/udf_likeany_wrong1.q.out
+index 3b7f41de4e..82fa5e1ca6 100644
+--- ql/src/test/results/clientnegative/udf_likeany_wrong1.q.out
++++ ql/src/test/results/clientnegative/udf_likeany_wrong1.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 1:7 Argument type mismatch '120': likeany only takes STRING_GROUP, VOID_GROUP types as 1st argument, got INT
++FAILED: SemanticException [Error 10016]: Line 2:7 Argument type mismatch '120': likeany only takes STRING_GROUP, VOID_GROUP types as 1st argument, got INT
 diff --git ql/src/test/results/clientnegative/udf_locate_wrong_args_len.q.out ql/src/test/results/clientnegative/udf_locate_wrong_args_len.q.out
 index b3e353b88c..356138035a 100644
 --- ql/src/test/results/clientnegative/udf_locate_wrong_args_len.q.out
@@ -20571,6 +21792,20 @@ index eb724a576f..db41e2e534 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10016]: Line 2:22 Argument type mismatch 'lintstring': The 2nd argument of function LOCATE is expected to a primitive type, but list is found
 +FAILED: SemanticException [Error 10016]: Line 3:22 Argument type mismatch 'lintstring': The 2nd argument of function LOCATE is expected to a primitive type, but list is found
+diff --git ql/src/test/results/clientnegative/udf_map_keys_arg_num.q.out ql/src/test/results/clientnegative/udf_map_keys_arg_num.q.out
+index 44fcc5807d..f551346923 100644
+--- ql/src/test/results/clientnegative/udf_map_keys_arg_num.q.out
++++ ql/src/test/results/clientnegative/udf_map_keys_arg_num.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10015]: Line 1:7 Arguments length mismatch '"2"': The function MAP_KEYS only accepts one argument.
++FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch '"2"': The function MAP_KEYS only accepts one argument.
+diff --git ql/src/test/results/clientnegative/udf_map_keys_arg_type.q.out ql/src/test/results/clientnegative/udf_map_keys_arg_type.q.out
+index 5a190ce614..568aaf1c55 100644
+--- ql/src/test/results/clientnegative/udf_map_keys_arg_type.q.out
++++ ql/src/test/results/clientnegative/udf_map_keys_arg_type.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 1:16 Argument type mismatch '3': "map" is expected at function MAP_KEYS, but "array<int>" is found
++FAILED: SemanticException [Error 10016]: Line 2:16 Argument type mismatch '3': "map" is expected at function MAP_KEYS, but "array<int>" is found
 diff --git ql/src/test/results/clientnegative/udf_map_values_arg_num.q.out ql/src/test/results/clientnegative/udf_map_values_arg_num.q.out
 index f5deee4d74..6320a2eed0 100644
 --- ql/src/test/results/clientnegative/udf_map_values_arg_num.q.out
@@ -20578,6 +21813,13 @@ index f5deee4d74..6320a2eed0 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10015]: Line 1:7 Arguments length mismatch '"2"': The function MAP_VALUES only accepts 1 argument.
 +FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch '"2"': The function MAP_VALUES only accepts 1 argument.
+diff --git ql/src/test/results/clientnegative/udf_map_values_arg_type.q.out ql/src/test/results/clientnegative/udf_map_values_arg_type.q.out
+index affb070bab..0af2e65978 100644
+--- ql/src/test/results/clientnegative/udf_map_values_arg_type.q.out
++++ ql/src/test/results/clientnegative/udf_map_values_arg_type.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 1:18 Argument type mismatch '4': "map" is expected at function MAP_VALUES, but "array<int>" is found
++FAILED: SemanticException [Error 10016]: Line 2:18 Argument type mismatch '4': "map" is expected at function MAP_VALUES, but "array<int>" is found
 diff --git ql/src/test/results/clientnegative/udf_printf_wrong1.q.out ql/src/test/results/clientnegative/udf_printf_wrong1.q.out
 index 41359d03f1..298b8a9e3a 100644
 --- ql/src/test/results/clientnegative/udf_printf_wrong1.q.out
@@ -20599,6 +21841,13 @@ index c020fda493..95063b922f 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10016]: Line 2:32 Argument type mismatch '"argument"': Argument 2 of function PRINTF must be "PRIMITIVE", but "array<string>" was found.
 +FAILED: SemanticException [Error 10016]: Line 3:32 Argument type mismatch '"argument"': Argument 2 of function PRINTF must be "PRIMITIVE", but "array<string>" was found.
+diff --git ql/src/test/results/clientnegative/udf_printf_wrong4.q.out ql/src/test/results/clientnegative/udf_printf_wrong4.q.out
+index c020fda493..95063b922f 100644
+--- ql/src/test/results/clientnegative/udf_printf_wrong4.q.out
++++ ql/src/test/results/clientnegative/udf_printf_wrong4.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 2:32 Argument type mismatch '"argument"': Argument 2 of function PRINTF must be "PRIMITIVE", but "array<string>" was found.
++FAILED: SemanticException [Error 10016]: Line 3:32 Argument type mismatch '"argument"': Argument 2 of function PRINTF must be "PRIMITIVE", but "array<string>" was found.
 diff --git ql/src/test/results/clientnegative/udf_size_wrong_args_len.q.out ql/src/test/results/clientnegative/udf_size_wrong_args_len.q.out
 index 45b41facab..805776e85e 100644
 --- ql/src/test/results/clientnegative/udf_size_wrong_args_len.q.out
@@ -20613,6 +21862,13 @@ index 41007013a2..a38ee31a8c 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10016]: Line 1:12 Argument type mismatch ''wrong type: string'': "map" or "list" is expected at function SIZE, but "string" is found
 +FAILED: SemanticException [Error 10016]: Line 2:12 Argument type mismatch ''wrong type: string'': "map" or "list" is expected at function SIZE, but "string" is found
+diff --git ql/src/test/results/clientnegative/udf_sort_array_by_wrong1.q.out ql/src/test/results/clientnegative/udf_sort_array_by_wrong1.q.out
+index c7794d3215..5dd2eaecb5 100644
+--- ql/src/test/results/clientnegative/udf_sort_array_by_wrong1.q.out
++++ ql/src/test/results/clientnegative/udf_sort_array_by_wrong1.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 2:21 Argument type mismatch '4': Element[s] of first argument array in function SORT_ARRAY_BY must be struct, but array<int> was found.
++FAILED: SemanticException [Error 10016]: Line 3:21 Argument type mismatch '4': Element[s] of first argument array in function SORT_ARRAY_BY must be struct, but array<int> was found.
 diff --git ql/src/test/results/clientnegative/udf_sort_array_by_wrong2.q.out ql/src/test/results/clientnegative/udf_sort_array_by_wrong2.q.out
 index 220ade5735..4ae738ed35 100644
 --- ql/src/test/results/clientnegative/udf_sort_array_by_wrong2.q.out
@@ -20620,6 +21876,27 @@ index 220ade5735..4ae738ed35 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch '70000': SORT_ARRAY_BY requires minimum 2 arguments, got 1
 +FAILED: SemanticException [Error 10015]: Line 3:7 Arguments length mismatch '70000': SORT_ARRAY_BY requires minimum 2 arguments, got 1
+diff --git ql/src/test/results/clientnegative/udf_sort_array_wrong1.q.out ql/src/test/results/clientnegative/udf_sort_array_wrong1.q.out
+index 6d4b2abe69..883da96b21 100644
+--- ql/src/test/results/clientnegative/udf_sort_array_wrong1.q.out
++++ ql/src/test/results/clientnegative/udf_sort_array_wrong1.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10015]: Line 2:7 Arguments length mismatch '3': sortarray requires 1 argument(s), got 2
++FAILED: SemanticException [Error 10015]: Line 3:7 Arguments length mismatch '3': sortarray requires 1 argument(s), got 2
+diff --git ql/src/test/results/clientnegative/udf_sort_array_wrong2.q.out ql/src/test/results/clientnegative/udf_sort_array_wrong2.q.out
+index 2123e2e272..39ebb0e757 100644
+--- ql/src/test/results/clientnegative/udf_sort_array_wrong2.q.out
++++ ql/src/test/results/clientnegative/udf_sort_array_wrong2.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 2:18 Argument type mismatch '"Invalid"': Argument 1 of function SORT_ARRAY must be array, and element type should be either primitive, list, struct, or map, but string was found.
++FAILED: SemanticException [Error 10016]: Line 3:18 Argument type mismatch '"Invalid"': Argument 1 of function SORT_ARRAY must be array, and element type should be either primitive, list, struct, or map, but string was found.
+diff --git ql/src/test/results/clientnegative/udf_sort_array_wrong3.q.out ql/src/test/results/clientnegative/udf_sort_array_wrong3.q.out
+index 6745f4ff80..b78c645c0f 100644
+--- ql/src/test/results/clientnegative/udf_sort_array_wrong3.q.out
++++ ql/src/test/results/clientnegative/udf_sort_array_wrong3.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException [Error 10016]: Line 2:18 Argument type mismatch '"a"': Argument 1 of function SORT_ARRAY must be array, and element type should be either primitive, list, struct, or map, but array<uniontype<string>> was found.
++FAILED: SemanticException [Error 10016]: Line 3:18 Argument type mismatch '"a"': Argument 1 of function SORT_ARRAY must be array, and element type should be either primitive, list, struct, or map, but array<uniontype<string>> was found.
 diff --git ql/src/test/results/clientnegative/udf_when_type_wrong.q.out ql/src/test/results/clientnegative/udf_when_type_wrong.q.out
 index 7c7582d413..bc2851fead 100644
 --- ql/src/test/results/clientnegative/udf_when_type_wrong.q.out
@@ -20627,6 +21904,13 @@ index 7c7582d413..bc2851fead 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10016]: Line 3:13 Argument type mismatch ''1'': "boolean" is expected after WHEN, but "string" is found
 +FAILED: SemanticException [Error 10016]: Line 4:13 Argument type mismatch ''1'': "boolean" is expected after WHEN, but "string" is found
+diff --git ql/src/test/results/clientnegative/udtf_not_supported1.q.out ql/src/test/results/clientnegative/udtf_not_supported1.q.out
+index 0dcb730045..c5ab5490c5 100644
+--- ql/src/test/results/clientnegative/udtf_not_supported1.q.out
++++ ql/src/test/results/clientnegative/udtf_not_supported1.q.out
+@@ -1 +1 @@
+-FAILED: SemanticException 1:39 Only a single expression in the SELECT clause is supported with UDTF's. Error encountered near token 'key'
++FAILED: SemanticException 2:39 Only a single expression in the SELECT clause is supported with UDTF's. Error encountered near token 'key'
 diff --git ql/src/test/results/clientnegative/unionClusterBy.q.out ql/src/test/results/clientnegative/unionClusterBy.q.out
 index 7f014137dc..1f0dddcf2c 100644
 --- ql/src/test/results/clientnegative/unionClusterBy.q.out
