@@ -1387,6 +1387,185 @@ index 0497d25ffa..8b70c04be3 100644
  CREATE TABLE hbase_ppd_keyrange(key int, value string) 
  STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
  WITH SERDEPROPERTIES ("hbase.columns.mapping" = ":key#binary,cf:string");
+diff --git itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreBeeLineDriver.java itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreBeeLineDriver.java
+index 1ec1e5efa9..99748bdaf0 100644
+--- itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreBeeLineDriver.java
++++ itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreBeeLineDriver.java
+@@ -19,11 +19,27 @@
+ 
+ import static org.junit.Assert.fail;
+ 
+-import com.google.common.base.Strings;
++import java.io.File;
++import java.io.IOException;
++import java.sql.SQLException;
++import java.util.ArrayList;
++import java.util.Arrays;
++import java.util.HashMap;
++import java.util.HashSet;
++import java.util.List;
++import java.util.Map;
++import java.util.Set;
++import java.util.concurrent.Callable;
++import java.util.stream.Stream;
++
++import org.apache.commons.io.FileUtils;
+ import org.apache.commons.lang.StringUtils;
+ import org.apache.hadoop.hive.conf.HiveConf;
+ import org.apache.hadoop.hive.conf.HiveConfUtil;
+ import org.apache.hadoop.hive.ql.QTestProcessExecResult;
++import org.apache.hadoop.hive.ql.dataset.Dataset;
++import org.apache.hadoop.hive.ql.dataset.DatasetCollection;
++import org.apache.hadoop.hive.ql.dataset.DatasetParser;
+ import org.apache.hadoop.hive.ql.hooks.PreExecutePrinter;
+ import org.apache.hive.beeline.ConvertedOutputFile.Converter;
+ import org.apache.hive.beeline.QFile;
+@@ -34,10 +50,8 @@
+ import org.junit.AfterClass;
+ import org.junit.BeforeClass;
+ 
+-import java.io.File;
+-import java.io.IOException;
+-import java.sql.SQLException;
+-import java.util.HashMap;
++import com.google.common.base.Strings;
++import com.google.common.collect.ObjectArrays;
+ 
+ public class CoreBeeLineDriver extends CliAdapter {
+   private final File hiveRootDirectory = new File(AbstractCliConfig.HIVE_ROOT);
+@@ -48,11 +62,13 @@
+   private final File cleanupScript;
+   private final File testDataDirectory;
+   private final File testScriptDirectory;
++  private final File datasetDirectory;
+   private boolean overwrite = false;
+   private boolean useSharedDatabase = false;
+   private MiniHS2 miniHS2;
+   private QFileClientBuilder clientBuilder;
+   private QFileBuilder fileBuilder;
++  private final Map<String, Set<String>> datasets = new HashMap<String, Set<String>>();
+ 
+   public CoreBeeLineDriver(AbstractCliConfig testCliConfig) {
+     super(testCliConfig);
+@@ -71,6 +87,7 @@ public CoreBeeLineDriver(AbstractCliConfig testCliConfig) {
+       testDataDirectory = new File(testDataDirectoryName);
+     }
+     testScriptDirectory = new File(hiveRootDirectory, "data" + File.separator + "scripts");
++    datasetDirectory = new File(testDataDirectory, "datasets");
+     String initScriptFileName = System.getProperty("test.init.script");
+     if (initScriptFileName != null) {
+       initScript = new File(testScriptDirectory, initScriptFileName);
+@@ -156,6 +173,23 @@ protected void runInfraScript(File script, File beeLineOutput, File log)
+           + "\nCheck the following logs for details:\n - " + beeLineOutput + "\n - " + log, e);
+     }
+   }
++  
++  protected void runInfraScript(String[] commands, File beeLineOutput, File log)
++      throws IOException, SQLException {
++    try (QFileBeeLineClient beeLineClient = clientBuilder.getClient(beeLineOutput)) {
++      String[] preCommands =
++          new String[] { "set hive.exec.pre.hooks=" + PreExecutePrinter.class.getName() + ";",
++              "set test.data.dir=" + testDataDirectory + ";",
++              "set test.script.dir=" + testScriptDirectory + ";" };
++
++      String[] allCommands =
++          Stream.concat(Arrays.stream(preCommands), Arrays.stream(commands)).toArray(String[]::new);
++      beeLineClient.execute(allCommands, log, Converter.NONE);
++    } catch (Exception e) {
++      throw new SQLException("Error running infra commands, "
++          + "\nCheck the following logs for details:\n - " + beeLineOutput + "\n - " + log, e);
++    }
++  }
+ 
+   @Override
+   @AfterClass
+@@ -167,12 +201,12 @@ public void shutdown() throws Exception {
+     }
+   }
+ 
+-  public void runTest(QFile qFile) throws Exception {
++  private void runTest(QFile qFile, List<Callable<Void>> preCommands) throws Exception {
+     try (QFileBeeLineClient beeLineClient = clientBuilder.getClient(qFile.getLogFile())) {
+       long startTime = System.currentTimeMillis();
+       System.err.println(">>> STARTED " + qFile.getName());
+ 
+-      beeLineClient.execute(qFile);
++      beeLineClient.execute(qFile, preCommands);
+ 
+       long queryEndTime = System.currentTimeMillis();
+       System.err.println(">>> EXECUTED " + qFile.getName() + ": " + (queryEndTime - startTime)
+@@ -207,6 +241,11 @@ public void runTest(QFile qFile) throws Exception {
+       throw new Exception("Exception running or analyzing the results of the query file: " + qFile
+           + "\n" + qFile.getDebugHint(), e);
+     }
++    
++  }
++  
++  public void runTest(QFile qFile) throws Exception {
++    runTest(qFile, null);
+   }
+ 
+   @Override
+@@ -220,6 +259,58 @@ public void tearDown() {
+   @Override
+   public void runTest(String name, String name2, String absolutePath) throws Exception {
+     QFile qFile = fileBuilder.getQFile(name);
+-    runTest(qFile);
++    List<Callable<Void>> commands = initDataSetForTest(qFile);
++    runTest(qFile, commands);
++  }
++
++  private List<Callable<Void>> initDataSetForTest(QFile qFile) throws Exception {
++    DatasetParser parser = new DatasetParser();
++    parser.parse(qFile.getInputFile());
++
++    List<Callable<Void>> commands = new ArrayList<>();
++
++    DatasetCollection datasets = parser.getDatasets();
++    for (String table : datasets.getTables()) {
++      Callable<Void> command = initDataset(table, qFile);
++      if (command != null) {
++        commands.add(command);
++      }
++    }
++
++    return commands;
++  }
++
++  protected Callable<Void> initDataset(String table, QFile qFile) throws Exception {
++    if (datasetInitialized(table, qFile)) {
++      return null;
++    }
++
++    Callable<Void> command = new Callable<Void>() {
++      @Override
++      public Void call() throws Exception {
++        File tableFile = new File(new File(datasetDirectory, table), Dataset.INIT_FILE_NAME);
++        List<String> datasetLines = FileUtils.readLines(tableFile);
++        String[] datasetCommands = datasetLines.toArray(new String[datasetLines.size()]);
++
++        runInfraScript(
++            ObjectArrays.concat(String.format("use %s;", qFile.getDatabaseName()), datasetCommands),
++            new File(logDirectory, "dataset.beeline"), new File(logDirectory, "dataset.raw"));
++
++        return null;
++      }
++    };
++
++    datasets.get(qFile.getDatabaseName()).add(table);
++
++    return command;
++  }
++
++  private boolean datasetInitialized(String table, QFile qFile) {
++    if (datasets.get(qFile.getDatabaseName()) == null) {
++      datasets.put(qFile.getDatabaseName(), new HashSet<String>());
++      return false;
++    }
++
++    return datasets.get(qFile.getDatabaseName()).contains(table);
+   }
+ }
 diff --git itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreCompareCliDriver.java itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreCompareCliDriver.java
 index fbca4241d4..c36d231704 100644
 --- itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreCompareCliDriver.java
@@ -1414,7 +1593,7 @@ index 24bdc58cab..b40b8d7382 100644
  import static org.junit.Assert.fail;
  
 diff --git itests/util/src/main/java/org/apache/hadoop/hive/hbase/HBaseQTestUtil.java itests/util/src/main/java/org/apache/hadoop/hive/hbase/HBaseQTestUtil.java
-index 1873bfe9b8..f0dd4149b7 100644
+index 1873bfe9b8..07df0c9d1e 100644
 --- itests/util/src/main/java/org/apache/hadoop/hive/hbase/HBaseQTestUtil.java
 +++ itests/util/src/main/java/org/apache/hadoop/hive/hbase/HBaseQTestUtil.java
 @@ -68,14 +68,7 @@ public void createSources(String tname) throws Exception {
@@ -1433,6 +1612,16 @@ index 1873bfe9b8..f0dd4149b7 100644
  
      // create a snapshot
      Admin admin = null;
+@@ -93,9 +86,6 @@ public void createSources(String tname) throws Exception {
+   public void cleanUp(String tname) throws Exception {
+     super.cleanUp(tname);
+ 
+-    // drop in case leftover from unsuccessful run
+-    db.dropTable(Warehouse.DEFAULT_DATABASE_NAME, HBASE_SRC_NAME);
+-
+     Admin admin = null;
+     try {
+       admin = conn.getAdmin();
 diff --git itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java
 index 82590ce853..ba07513e59 100644
 --- itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java
@@ -1497,6 +1686,43 @@ index f087393d2b..a071689075 100644
        ASTNode tree = qt.parseQuery(fname);
        List<Task<? extends Serializable>> tasks = qt.analyzeAST(tree);
        fail("Unexpected success for query: " + fname + debugHint);
+diff --git itests/util/src/main/java/org/apache/hive/beeline/QFileBeeLineClient.java itests/util/src/main/java/org/apache/hive/beeline/QFileBeeLineClient.java
+index e6bf54b1e7..be4c6e89cd 100644
+--- itests/util/src/main/java/org/apache/hive/beeline/QFileBeeLineClient.java
++++ itests/util/src/main/java/org/apache/hive/beeline/QFileBeeLineClient.java
+@@ -28,8 +28,11 @@
+ import java.sql.DatabaseMetaData;
+ import java.sql.ResultSet;
+ import java.sql.SQLException;
++import java.util.ArrayList;
+ import java.util.HashSet;
++import java.util.List;
+ import java.util.Set;
++import java.util.concurrent.Callable;
+ import java.util.stream.Collectors;
+ 
+ /**
+@@ -189,7 +192,20 @@ private void afterExecute(QFile qFile) throws Exception {
+   }
+ 
+   public void execute(QFile qFile) throws Exception {
++    execute(qFile, null);
++  }
++
++  public void execute(QFile qFile, List<Callable<Void>> preCommands) throws Exception {
++    if (preCommands == null) {
++      preCommands = new ArrayList<Callable<Void>>();
++    }
++
+     beforeExecute(qFile);
++
++    for (Callable<Void> c : preCommands) {
++      c.call();
++    }
++
+     String[] commands = beeLine.getCommands(qFile.getInputFile());
+     execute(qFile.filterCommands(commands), qFile.getRawOutputFile(), qFile.getConverter());
+     afterExecute(qFile);
 diff --git pom.xml pom.xml
 index 5be30f6696..ac15ed1baa 100644
 --- pom.xml
@@ -20346,6 +20572,81 @@ index df39ecc28e..fc7d750b3b 100644
  PREHOOK: query: CREATE DATABASE alter_rename_partition_db
  PREHOOK: type: CREATEDATABASE
  PREHOOK: Output: database:alter_rename_partition_db
+diff --git ql/src/test/results/clientpositive/authorization_show_grant.q.out ql/src/test/results/clientpositive/authorization_show_grant.q.out
+index b4dab7822f..37c6555618 100644
+--- ql/src/test/results/clientpositive/authorization_show_grant.q.out
++++ ql/src/test/results/clientpositive/authorization_show_grant.q.out
+@@ -103,70 +103,6 @@ PREHOOK: query: show grant
+ PREHOOK: type: SHOW_GRANT
+ POSTHOOK: query: show grant
+ POSTHOOK: type: SHOW_GRANT
+-default	alltypesorc			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	alltypesorc			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	alltypesorc			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	alltypesorc			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	alltypesparquet			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	alltypesparquet			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	alltypesparquet			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	alltypesparquet			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	cbo_t1			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	cbo_t1			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	cbo_t1			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	cbo_t1			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	cbo_t2			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	cbo_t2			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	cbo_t2			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	cbo_t2			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	cbo_t3			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	cbo_t3			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	cbo_t3			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	cbo_t3			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	lineitem			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	lineitem			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	lineitem			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	lineitem			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	part			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	part			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	part			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	part			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	src			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	src			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	src			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	src			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	src1			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	src1			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	src1			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	src1			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	src_cbo			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	src_cbo			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	src_cbo			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	src_cbo			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	src_json			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	src_json			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	src_json			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	src_json			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	src_sequencefile			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	src_sequencefile			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	src_sequencefile			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	src_sequencefile			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	src_thrift			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	src_thrift			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	src_thrift			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	src_thrift			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	srcbucket			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	srcbucket			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	srcbucket			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	srcbucket			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	srcbucket2			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	srcbucket2			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	srcbucket2			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	srcbucket2			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	srcpart			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	srcpart			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	srcpart			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	srcpart			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+ default	t1			rolea	ROLE	SELECT	false	-1	user1
+ default	t1			user1	USER	DELETE	true	-1	hive_admin_user
+ default	t1			user1	USER	INSERT	true	-1	hive_admin_user
 diff --git ql/src/test/results/clientpositive/cte_5.q.out ql/src/test/results/clientpositive/cte_5.q.out
 index e99f1e73c2..83d47c5de9 100644
 --- ql/src/test/results/clientpositive/cte_5.q.out
@@ -21135,10 +21436,10 @@ index c5802742e5..58e0293b10 100644
  PREHOOK: type: DESCTABLE
  PREHOOK: Input: default@tables
 diff --git ql/src/test/results/clientpositive/llap/resourceplan.q.out ql/src/test/results/clientpositive/llap/resourceplan.q.out
-index 96ed8c67c5..b1c9e0ac9f 100644
+index 96ed8c67c5..68832e0b5d 100644
 --- ql/src/test/results/clientpositive/llap/resourceplan.q.out
 +++ ql/src/test/results/clientpositive/llap/resourceplan.q.out
-@@ -2,34 +2,6 @@ PREHOOK: query: show grant user hive_test_user
+@@ -2,70 +2,6 @@ PREHOOK: query: show grant user hive_test_user
  PREHOOK: type: SHOW_GRANT
  POSTHOOK: query: show grant user hive_test_user
  POSTHOOK: type: SHOW_GRANT
@@ -21170,13 +21471,14 @@ index 96ed8c67c5..b1c9e0ac9f 100644
 -default	part			hive_test_user	USER	INSERT	true	-1	hive_test_user
 -default	part			hive_test_user	USER	SELECT	true	-1	hive_test_user
 -default	part			hive_test_user	USER	UPDATE	true	-1	hive_test_user
- default	src			hive_test_user	USER	DELETE	true	-1	hive_test_user
- default	src			hive_test_user	USER	INSERT	true	-1	hive_test_user
- default	src			hive_test_user	USER	SELECT	true	-1	hive_test_user
-@@ -38,34 +10,6 @@ default	src1			hive_test_user	USER	DELETE	true	-1	hive_test_user
- default	src1			hive_test_user	USER	INSERT	true	-1	hive_test_user
- default	src1			hive_test_user	USER	SELECT	true	-1	hive_test_user
- default	src1			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	src			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	src			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	src			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	src			hive_test_user	USER	UPDATE	true	-1	hive_test_user
+-default	src1			hive_test_user	USER	DELETE	true	-1	hive_test_user
+-default	src1			hive_test_user	USER	INSERT	true	-1	hive_test_user
+-default	src1			hive_test_user	USER	SELECT	true	-1	hive_test_user
+-default	src1			hive_test_user	USER	UPDATE	true	-1	hive_test_user
 -default	src_cbo			hive_test_user	USER	DELETE	true	-1	hive_test_user
 -default	src_cbo			hive_test_user	USER	INSERT	true	-1	hive_test_user
 -default	src_cbo			hive_test_user	USER	SELECT	true	-1	hive_test_user
