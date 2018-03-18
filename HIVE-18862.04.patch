@@ -1399,6 +1399,77 @@ index 0497d25ffa..8b70c04be3 100644
  CREATE TABLE hbase_ppd_keyrange(key int, value string) 
  STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
  WITH SERDEPROPERTIES ("hbase.columns.mapping" = ":key#binary,cf:string");
+diff --git itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreAccumuloCliDriver.java itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreAccumuloCliDriver.java
+index d21fcaf0f8..9c9ba181fc 100644
+--- itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreAccumuloCliDriver.java
++++ itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreAccumuloCliDriver.java
+@@ -43,16 +43,7 @@ public CoreAccumuloCliDriver(AbstractCliConfig cliConfig) {
+   @BeforeClass
+   public void beforeClass() {
+     setup = new AccumuloTestSetup();
+-  }
+-  @Override
+-  @AfterClass
+-  public void shutdown() throws Exception {
+-    setup.tearDown();
+-  }
+-  @Override
+-  @Before
+-  public void setUp() {
+-
++    
+     MiniClusterType miniMR = cliConfig.getClusterType();
+     String initScript = cliConfig.getInitScript();
+     String cleanupScript = cliConfig.getCleanupScript();
+@@ -60,14 +51,20 @@ public void setUp() {
+     try {
+       qt = new AccumuloQTestUtil(cliConfig.getResultsDir(), cliConfig.getLogDir(), miniMR,
+           setup, initScript, cleanupScript);
++      
++      // do a one time initialization
++      qt.cleanUp();
++      qt.createSources();
+     } catch (Exception e) {
+       throw new RuntimeException("Unexpected exception in setUp",e);
+     }
+   }
+-
++  
+   @Override
+-  @After
+-  public void tearDown() {
++  @AfterClass
++  public void shutdown() throws Exception {
++    setup.tearDown();
++    
+     try {
+       qt.shutdown();
+     }
+@@ -75,6 +72,15 @@ public void tearDown() {
+       throw new RuntimeException("Unexpected exception in tearDown",e);
+     }
+   }
++  @Override
++  @Before
++  public void setUp() {
++  }
++
++  @Override
++  @After
++  public void tearDown() {
++  }
+ 
+   @Override
+   public void runTest(String tname, String fname, String fpath) throws Exception {
+@@ -89,7 +95,7 @@ public void runTest(String tname, String fname, String fpath) throws Exception {
+         return;
+       }
+ 
+-      qt.cliInit(new File(fpath));
++      qt.cliInit(new File(fpath), false);
+       qt.clearTestSideEffects();
+       int ecode = qt.executeClient(fname);
+       if (ecode != 0) {
 diff --git itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreBeeLineDriver.java itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreBeeLineDriver.java
 index 1ec1e5efa9..99748bdaf0 100644
 --- itests/util/src/main/java/org/apache/hadoop/hive/cli/control/CoreBeeLineDriver.java
@@ -21939,6 +22010,27 @@ index 7f014137dc..1f0dddcf2c 100644
 @@ -1 +1 @@
 -FAILED: ParseException line 5:0 missing EOF at 'union' near 'key'
 +FAILED: ParseException line 6:0 missing EOF at 'union' near 'key'
+diff --git ql/src/test/results/clientnegative/unionSortBy.q.out ql/src/test/results/clientnegative/unionSortBy.q.out
+index 7f014137dc..1f0dddcf2c 100644
+--- ql/src/test/results/clientnegative/unionSortBy.q.out
++++ ql/src/test/results/clientnegative/unionSortBy.q.out
+@@ -1 +1 @@
+-FAILED: ParseException line 5:0 missing EOF at 'union' near 'key'
++FAILED: ParseException line 6:0 missing EOF at 'union' near 'key'
+diff --git ql/src/test/results/clientnegative/uniquejoin.q.out ql/src/test/results/clientnegative/uniquejoin.q.out
+index 57787704fe..f44b309e0f 100644
+--- ql/src/test/results/clientnegative/uniquejoin.q.out
++++ ql/src/test/results/clientnegative/uniquejoin.q.out
+@@ -1 +1 @@
+-FAILED: ParseException line 1:16 cannot recognize input near '(' 'SELECT' 'src' in table name
++FAILED: ParseException line 2:16 cannot recognize input near '(' 'SELECT' 'src' in table name
+diff --git ql/src/test/results/clientnegative/uniquejoin3.q.out ql/src/test/results/clientnegative/uniquejoin3.q.out
+index e10a47bef2..319b0b3369 100644
+--- ql/src/test/results/clientnegative/uniquejoin3.q.out
++++ ql/src/test/results/clientnegative/uniquejoin3.q.out
+@@ -1 +1 @@
+-FAILED: ParseException line 1:54 required (...)+ loop did not match anything at input 'JOIN' in statement
++FAILED: ParseException line 2:54 required (...)+ loop did not match anything at input 'JOIN' in statement
 diff --git ql/src/test/results/clientpositive/add_part_exist.q.out ql/src/test/results/clientpositive/add_part_exist.q.out
 index 78516643f8..e918ae23a9 100644
 --- ql/src/test/results/clientpositive/add_part_exist.q.out
