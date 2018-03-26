@@ -1,0 +1,108 @@
+diff --git ql/src/test/queries/clientpositive/stats_analyze_empty.q ql/src/test/queries/clientpositive/stats_analyze_empty.q
+new file mode 100644
+index 0000000000..6ea6125964
+--- /dev/null
++++ ql/src/test/queries/clientpositive/stats_analyze_empty.q
+@@ -0,0 +1,18 @@
++set hive.stats.autogather=true;
++set hive.explain.user=true;
++
++drop table if exists testdeci2;
++
++create table testdeci2(
++id int,
++amount decimal(10,3),
++sales_tax decimal(10,3),
++item string)
++stored as orc location '/tmp/testdeci2'
++TBLPROPERTIES ("transactional"="false")
++;
++
++
++analyze table testdeci2 compute statistics for columns;
++
++insert into table testdeci2 values(1,12.123,12345.123,'desk1'),(2,123.123,1234.123,'desk2');
+diff --git ql/src/test/results/clientpositive/stats_analyze_empty.q.out ql/src/test/results/clientpositive/stats_analyze_empty.q.out
+new file mode 100644
+index 0000000000..6eb51e950d
+--- /dev/null
++++ ql/src/test/results/clientpositive/stats_analyze_empty.q.out
+@@ -0,0 +1,48 @@
++PREHOOK: query: drop table if exists testdeci2
++PREHOOK: type: DROPTABLE
++POSTHOOK: query: drop table if exists testdeci2
++POSTHOOK: type: DROPTABLE
++PREHOOK: query: create table testdeci2(
++id int,
++amount decimal(10,3),
++sales_tax decimal(10,3),
++item string)
++#### A masked pattern was here ####
++TBLPROPERTIES ("transactional"="false")
++PREHOOK: type: CREATETABLE
++#### A masked pattern was here ####
++PREHOOK: Output: database:default
++PREHOOK: Output: default@testdeci2
++POSTHOOK: query: create table testdeci2(
++id int,
++amount decimal(10,3),
++sales_tax decimal(10,3),
++item string)
++#### A masked pattern was here ####
++TBLPROPERTIES ("transactional"="false")
++POSTHOOK: type: CREATETABLE
++#### A masked pattern was here ####
++POSTHOOK: Output: database:default
++POSTHOOK: Output: default@testdeci2
++PREHOOK: query: analyze table testdeci2 compute statistics for columns
++PREHOOK: type: QUERY
++PREHOOK: Input: default@testdeci2
++PREHOOK: Output: default@testdeci2
++#### A masked pattern was here ####
++POSTHOOK: query: analyze table testdeci2 compute statistics for columns
++POSTHOOK: type: QUERY
++POSTHOOK: Input: default@testdeci2
++POSTHOOK: Output: default@testdeci2
++#### A masked pattern was here ####
++PREHOOK: query: insert into table testdeci2 values(1,12.123,12345.123,'desk1'),(2,123.123,1234.123,'desk2')
++PREHOOK: type: QUERY
++PREHOOK: Input: _dummy_database@_dummy_table
++PREHOOK: Output: default@testdeci2
++POSTHOOK: query: insert into table testdeci2 values(1,12.123,12345.123,'desk1'),(2,123.123,1234.123,'desk2')
++POSTHOOK: type: QUERY
++POSTHOOK: Input: _dummy_database@_dummy_table
++POSTHOOK: Output: default@testdeci2
++POSTHOOK: Lineage: testdeci2.amount SCRIPT []
++POSTHOOK: Lineage: testdeci2.id SCRIPT []
++POSTHOOK: Lineage: testdeci2.item SCRIPT []
++POSTHOOK: Lineage: testdeci2.sales_tax SCRIPT []
+diff --git standalone-metastore/src/main/java/org/apache/hadoop/hive/metastore/columnstats/merge/DecimalColumnStatsMerger.java standalone-metastore/src/main/java/org/apache/hadoop/hive/metastore/columnstats/merge/DecimalColumnStatsMerger.java
+index 01f3385d70..fce10632e0 100644
+--- standalone-metastore/src/main/java/org/apache/hadoop/hive/metastore/columnstats/merge/DecimalColumnStatsMerger.java
++++ standalone-metastore/src/main/java/org/apache/hadoop/hive/metastore/columnstats/merge/DecimalColumnStatsMerger.java
+@@ -31,15 +31,19 @@ public void merge(ColumnStatisticsObj aggregateColStats, ColumnStatisticsObj new
+         (DecimalColumnStatsDataInspector) aggregateColStats.getStatsData().getDecimalStats();
+     DecimalColumnStatsDataInspector newData =
+         (DecimalColumnStatsDataInspector) newColStats.getStatsData().getDecimalStats();
+-    Decimal lowValue = aggregateData.getLowValue() != null
+-        && (aggregateData.getLowValue().compareTo(newData.getLowValue()) > 0) ? aggregateData
+-        .getLowValue() : newData.getLowValue();
++
++    Decimal lowValue = (newData.getLowValue() == null || (aggregateData.getLowValue() != null
++        && (aggregateData.getLowValue().compareTo(newData.getLowValue()) > 0)))
++          ? aggregateData.getLowValue() : newData.getLowValue();
+     aggregateData.setLowValue(lowValue);
+-    Decimal highValue = aggregateData.getHighValue() != null
+-        && (aggregateData.getHighValue().compareTo(newData.getHighValue()) > 0) ? aggregateData
+-        .getHighValue() : newData.getHighValue();
++
++    Decimal highValue = (newData.getHighValue() == null || (aggregateData.getHighValue() != null
++        && (aggregateData.getHighValue().compareTo(newData.getHighValue()) > 0)))
++          ? aggregateData.getHighValue() : newData.getHighValue();
+     aggregateData.setHighValue(highValue);
++   
+     aggregateData.setNumNulls(aggregateData.getNumNulls() + newData.getNumNulls());
++    
+     if (aggregateData.getNdvEstimator() == null || newData.getNdvEstimator() == null) {
+       aggregateData.setNumDVs(Math.max(aggregateData.getNumDVs(), newData.getNumDVs()));
+     } else {
