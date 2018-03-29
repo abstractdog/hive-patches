@@ -1706,7 +1706,7 @@ index 1873bfe9b8..07df0c9d1e 100644
      try {
        admin = conn.getAdmin();
 diff --git itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java
-index 050f9d5765..ef026f8100 100644
+index 050f9d5765..708e8d04c8 100644
 --- itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java
 +++ itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java
 @@ -160,6 +160,7 @@
@@ -1746,21 +1746,34 @@ index 050f9d5765..ef026f8100 100644
    }
  
    private CliDriver getCliDriver() {
-@@ -1053,6 +1048,13 @@ public void clearTestSideEffects() throws Exception {
+@@ -1053,6 +1048,17 @@ public void clearTestSideEffects() throws Exception {
      clearTablesCreatedDuringTests();
      clearUDFsCreatedDuringTests();
      clearKeysCreatedInTests();
-+    clearAuthorizationSideEffects();
++    clearSettingsCreatedInTests();
 +  }
 +  
-+  protected void clearAuthorizationSideEffects() {
++  protected void clearSettingsCreatedInTests() {
 +    getCliDriver().processLine(String.format("set hive.security.authorization.enabled=false;"));
 +    getCliDriver().processLine(String.format("set user.name=%s;",
 +        System.getProperty(TEST_HIVE_USER_PROPERTY, "hive_test_user")));
++    
++    getCliDriver().processLine("set hive.metastore.partition.name.whitelist.pattern=;");
++    getCliDriver().processLine("set hive.test.mode=false;");
++    getCliDriver().processLine("set hive.mapred.mode=nonstrict;");
    }
  
    protected void initConfFromSetup() throws Exception {
-@@ -1183,7 +1185,7 @@ private void initDataSetForTest(File file){
+@@ -1075,7 +1081,7 @@ public void cleanUp(String fileName) throws Exception {
+     clearTablesCreatedDuringTests();
+     clearUDFsCreatedDuringTests();
+     clearKeysCreatedInTests();
+-
++    
+     cleanupFromFile();
+ 
+     // delete any contents in the warehouse dir
+@@ -1183,7 +1189,7 @@ private void initDataSetForTest(File file){
      }
    }
  
@@ -1829,10 +1842,10 @@ index e6bf54b1e7..be4c6e89cd 100644
      execute(qFile.filterCommands(commands), qFile.getRawOutputFile(), qFile.getConverter());
      afterExecute(qFile);
 diff --git pom.xml pom.xml
-index afaad7dc63..a9924ca4bf 100644
+index 194a7d0bb1..fef8fd9a0c 100644
 --- pom.xml
 +++ pom.xml
-@@ -1285,7 +1285,7 @@
+@@ -1298,7 +1298,7 @@
              <test.warehouse.dir>${test.warehouse.scheme}${test.warehouse.dir}</test.warehouse.dir>
              <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
              <!-- EnforceReadOnlyTables hook and QTestUtil -->
