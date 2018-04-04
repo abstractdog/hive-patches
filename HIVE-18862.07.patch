@@ -1706,7 +1706,7 @@ index 1873bfe9b8..07df0c9d1e 100644
      try {
        admin = conn.getAdmin();
 diff --git itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java
-index 050f9d5765..708e8d04c8 100644
+index 050f9d5765..950860dc8e 100644
 --- itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java
 +++ itests/util/src/main/java/org/apache/hadoop/hive/ql/QTestUtil.java
 @@ -160,6 +160,7 @@
@@ -1746,14 +1746,18 @@ index 050f9d5765..708e8d04c8 100644
    }
  
    private CliDriver getCliDriver() {
-@@ -1053,6 +1048,17 @@ public void clearTestSideEffects() throws Exception {
+@@ -1053,6 +1048,21 @@ public void clearTestSideEffects() throws Exception {
      clearTablesCreatedDuringTests();
      clearUDFsCreatedDuringTests();
      clearKeysCreatedInTests();
 +    clearSettingsCreatedInTests();
 +  }
 +  
-+  protected void clearSettingsCreatedInTests() {
++  protected void clearSettingsCreatedInTests() throws IOException {
++    if(!isSessionStateStarted) { // force create a new CliSessionState
++      startSessionState(true);
++    }
++
 +    getCliDriver().processLine(String.format("set hive.security.authorization.enabled=false;"));
 +    getCliDriver().processLine(String.format("set user.name=%s;",
 +        System.getProperty(TEST_HIVE_USER_PROPERTY, "hive_test_user")));
@@ -1764,7 +1768,7 @@ index 050f9d5765..708e8d04c8 100644
    }
  
    protected void initConfFromSetup() throws Exception {
-@@ -1075,7 +1081,7 @@ public void cleanUp(String fileName) throws Exception {
+@@ -1075,7 +1085,7 @@ public void cleanUp(String fileName) throws Exception {
      clearTablesCreatedDuringTests();
      clearUDFsCreatedDuringTests();
      clearKeysCreatedInTests();
@@ -1773,7 +1777,7 @@ index 050f9d5765..708e8d04c8 100644
      cleanupFromFile();
  
      // delete any contents in the warehouse dir
-@@ -1183,7 +1189,7 @@ private void initDataSetForTest(File file){
+@@ -1183,7 +1193,7 @@ private void initDataSetForTest(File file){
      }
    }
  
@@ -10070,14 +10074,14 @@ index 3517693d14..daf2db9476 100644
  set hive.exec.reducers.max = 10;
  set hive.map.groupby.sorted=true;
 diff --git ql/src/test/queries/clientpositive/groupby_sort_11.q ql/src/test/queries/clientpositive/groupby_sort_11.q
-index 3b6c172f54..15976942ee 100644
+index c56789df11..015d91b957 100644
 --- ql/src/test/queries/clientpositive/groupby_sort_11.q
 +++ ql/src/test/queries/clientpositive/groupby_sort_11.q
 @@ -1,3 +1,4 @@
 +--! qt:dataset:src
+ SET hive.vectorized.execution.enabled=false;
  set hive.mapred.mode=nonstrict;
  set hive.exec.reducers.max = 1;
- set hive.map.groupby.sorted=true;
 diff --git ql/src/test/queries/clientpositive/groupby_sort_5.q ql/src/test/queries/clientpositive/groupby_sort_5.q
 index c7ff184cf3..1fdd404067 100644
 --- ql/src/test/queries/clientpositive/groupby_sort_5.q
@@ -13789,14 +13793,19 @@ index b92bb9c06c..ded6f252d4 100644
  drop table if exists test.test_orc_src;
  drop table if exists test.test_orc_src2;
 diff --git ql/src/test/queries/clientpositive/orc_null_check.q ql/src/test/queries/clientpositive/orc_null_check.q
-index 2cb119024a..8b51bc95cc 100644
+index e5453fcc57..85b43720c8 100644
 --- ql/src/test/queries/clientpositive/orc_null_check.q
 +++ ql/src/test/queries/clientpositive/orc_null_check.q
 @@ -1,3 +1,4 @@
 +--! qt:dataset:src
- create table listtable(l array<string>);
- create table listtable_orc(l array<string>) stored as orc;
+ SET hive.vectorized.execution.enabled=false;
  
+ create table listtable(l array<string>);
+@@ -7,4 +8,3 @@ insert overwrite table listtable select array(null) from src;
+ insert overwrite table listtable_orc select * from listtable;
+ 
+ select size(l) from listtable_orc limit 10;
+-
 diff --git ql/src/test/queries/clientpositive/orc_ppd_basic.q ql/src/test/queries/clientpositive/orc_ppd_basic.q
 index 1c9e4dd6cb..dfd89a75ff 100644
 --- ql/src/test/queries/clientpositive/orc_ppd_basic.q
@@ -15576,6 +15585,15 @@ index 8e5766cc14..c220d44820 100644
  set hive.mapred.mode=nonstrict;
  set hive.metastore.try.direct.sql=true;
  
+diff --git ql/src/test/queries/clientpositive/resourceplan.q ql/src/test/queries/clientpositive/resourceplan.q
+index bb5266a785..4cbdede342 100644
+--- ql/src/test/queries/clientpositive/resourceplan.q
++++ ql/src/test/queries/clientpositive/resourceplan.q
+@@ -1,3 +1,4 @@
++--! qt:dataset:alltypesorc,alltypesparquet,cbo_t1,cbo_t2,cbo_t3,lineitem,part,src,src1,src_cbo,src_json,src_sequencefile,src_thrift,srcbucket,srcbucket2,srcpart
+ -- Continue on errors, we do check some error conditions below.
+ set hive.cli.errors.ignore=true;
+ set hive.test.authz.sstd.hs2.mode=true;
 diff --git ql/src/test/queries/clientpositive/results_cache_1.q ql/src/test/queries/clientpositive/results_cache_1.q
 index 4aea60e1e5..b4149fd778 100644
 --- ql/src/test/queries/clientpositive/results_cache_1.q
@@ -18249,14 +18267,14 @@ index 538dfae06f..136ad58443 100644
  
  DESCRIBE FUNCTION concat_ws;
 diff --git ql/src/test/queries/clientpositive/udf_context_aware.q ql/src/test/queries/clientpositive/udf_context_aware.q
-index 04cb512f4a..a717a9d88b 100644
+index b12c213838..a3aa83e804 100644
 --- ql/src/test/queries/clientpositive/udf_context_aware.q
 +++ ql/src/test/queries/clientpositive/udf_context_aware.q
 @@ -1,3 +1,4 @@
 +--! qt:dataset:src
- create temporary function counter as 'org.apache.hadoop.hive.ql.udf.generic.DummyContextUDF';
+ SET hive.vectorized.execution.enabled=false;
  
- set hive.input.format = org.apache.hadoop.hive.ql.io.BucketizedHiveInputFormat;
+ create temporary function counter as 'org.apache.hadoop.hive.ql.udf.generic.DummyContextUDF';
 diff --git ql/src/test/queries/clientpositive/udf_conv.q ql/src/test/queries/clientpositive/udf_conv.q
 index c6d6cf8600..ac77a5daf6 100644
 --- ql/src/test/queries/clientpositive/udf_conv.q
@@ -18466,14 +18484,14 @@ index f54d963afd..99fafd44bf 100644
  
  SELECT 1 IN (1, 2, 3),
 diff --git ql/src/test/queries/clientpositive/udf_inline.q ql/src/test/queries/clientpositive/udf_inline.q
-index 95d55f71c1..dcb77c5d8d 100644
+index 111e452944..e24f8a7cad 100644
 --- ql/src/test/queries/clientpositive/udf_inline.q
 +++ ql/src/test/queries/clientpositive/udf_inline.q
 @@ -1,3 +1,4 @@
 +--! qt:dataset:src
  set hive.fetch.task.conversion=more;
+ SET hive.vectorized.execution.enabled=false;
  
- describe function inline;
 diff --git ql/src/test/queries/clientpositive/udf_instr.q ql/src/test/queries/clientpositive/udf_instr.q
 index 790a1049d1..a7e837e2a2 100644
 --- ql/src/test/queries/clientpositive/udf_instr.q
@@ -20564,14 +20582,14 @@ index 29c025c632..c38ef09af4 100644
  set hive.fetch.task.conversion=none;
  
 diff --git ql/src/test/queries/clientpositive/vectorization_div0.q ql/src/test/queries/clientpositive/vectorization_div0.q
-index 26ff2662a7..8c0a6247b7 100644
+index 1e86f01c8e..966994519a 100644
 --- ql/src/test/queries/clientpositive/vectorization_div0.q
 +++ ql/src/test/queries/clientpositive/vectorization_div0.q
 @@ -1,3 +1,4 @@
 +--! qt:dataset:alltypesorc
  set hive.mapred.mode=nonstrict;
  set hive.explain.user=false;
- SET hive.vectorized.execution.enabled = true;
+ set hive.cli.print.header=true;
 diff --git ql/src/test/queries/clientpositive/vectorization_input_format_excludes.q ql/src/test/queries/clientpositive/vectorization_input_format_excludes.q
 index 8d22efd9aa..ed0eb56a57 100644
 --- ql/src/test/queries/clientpositive/vectorization_input_format_excludes.q
@@ -20582,7 +20600,7 @@ index 8d22efd9aa..ed0eb56a57 100644
  set hive.vectorized.use.row.serde.deserialize=true;
  set hive.vectorized.use.vector.serde.deserialize=true;
 diff --git ql/src/test/queries/clientpositive/vectorization_limit.q ql/src/test/queries/clientpositive/vectorization_limit.q
-index 8044484c53..f0662208fd 100644
+index 30d5500e1d..2cc3f47ebf 100644
 --- ql/src/test/queries/clientpositive/vectorization_limit.q
 +++ ql/src/test/queries/clientpositive/vectorization_limit.q
 @@ -1,3 +1,4 @@
@@ -23703,81 +23721,6 @@ index c5802742e5..58e0293b10 100644
  PREHOOK: query: describe tables
  PREHOOK: type: DESCTABLE
  PREHOOK: Input: default@tables
-diff --git ql/src/test/results/clientpositive/llap/resourceplan.q.out ql/src/test/results/clientpositive/llap/resourceplan.q.out
-index 96ed8c67c5..68832e0b5d 100644
---- ql/src/test/results/clientpositive/llap/resourceplan.q.out
-+++ ql/src/test/results/clientpositive/llap/resourceplan.q.out
-@@ -2,70 +2,6 @@ PREHOOK: query: show grant user hive_test_user
- PREHOOK: type: SHOW_GRANT
- POSTHOOK: query: show grant user hive_test_user
- POSTHOOK: type: SHOW_GRANT
--default	alltypesorc			hive_test_user	USER	DELETE	true	-1	hive_test_user
--default	alltypesorc			hive_test_user	USER	INSERT	true	-1	hive_test_user
--default	alltypesorc			hive_test_user	USER	SELECT	true	-1	hive_test_user
--default	alltypesorc			hive_test_user	USER	UPDATE	true	-1	hive_test_user
--default	alltypesparquet			hive_test_user	USER	DELETE	true	-1	hive_test_user
--default	alltypesparquet			hive_test_user	USER	INSERT	true	-1	hive_test_user
--default	alltypesparquet			hive_test_user	USER	SELECT	true	-1	hive_test_user
--default	alltypesparquet			hive_test_user	USER	UPDATE	true	-1	hive_test_user
--default	cbo_t1			hive_test_user	USER	DELETE	true	-1	hive_test_user
--default	cbo_t1			hive_test_user	USER	INSERT	true	-1	hive_test_user
--default	cbo_t1			hive_test_user	USER	SELECT	true	-1	hive_test_user
--default	cbo_t1			hive_test_user	USER	UPDATE	true	-1	hive_test_user
--default	cbo_t2			hive_test_user	USER	DELETE	true	-1	hive_test_user
--default	cbo_t2			hive_test_user	USER	INSERT	true	-1	hive_test_user
--default	cbo_t2			hive_test_user	USER	SELECT	true	-1	hive_test_user
--default	cbo_t2			hive_test_user	USER	UPDATE	true	-1	hive_test_user
--default	cbo_t3			hive_test_user	USER	DELETE	true	-1	hive_test_user
--default	cbo_t3			hive_test_user	USER	INSERT	true	-1	hive_test_user
--default	cbo_t3			hive_test_user	USER	SELECT	true	-1	hive_test_user
--default	cbo_t3			hive_test_user	USER	UPDATE	true	-1	hive_test_user
--default	lineitem			hive_test_user	USER	DELETE	true	-1	hive_test_user
--default	lineitem			hive_test_user	USER	INSERT	true	-1	hive_test_user
--default	lineitem			hive_test_user	USER	SELECT	true	-1	hive_test_user
--default	lineitem			hive_test_user	USER	UPDATE	true	-1	hive_test_user
--default	part			hive_test_user	USER	DELETE	true	-1	hive_test_user
--default	part			hive_test_user	USER	INSERT	true	-1	hive_test_user
--default	part			hive_test_user	USER	SELECT	true	-1	hive_test_user
--default	part			hive_test_user	USER	UPDATE	true	-1	hive_test_user
--default	src			hive_test_user	USER	DELETE	true	-1	hive_test_user
--default	src			hive_test_user	USER	INSERT	true	-1	hive_test_user
--default	src			hive_test_user	USER	SELECT	true	-1	hive_test_user
--default	src			hive_test_user	USER	UPDATE	true	-1	hive_test_user
--default	src1			hive_test_user	USER	DELETE	true	-1	hive_test_user
--default	src1			hive_test_user	USER	INSERT	true	-1	hive_test_user
--default	src1			hive_test_user	USER	SELECT	true	-1	hive_test_user
--default	src1			hive_test_user	USER	UPDATE	true	-1	hive_test_user
--default	src_cbo			hive_test_user	USER	DELETE	true	-1	hive_test_user
--default	src_cbo			hive_test_user	USER	INSERT	true	-1	hive_test_user
--default	src_cbo			hive_test_user	USER	SELECT	true	-1	hive_test_user
--default	src_cbo			hive_test_user	USER	UPDATE	true	-1	hive_test_user
--default	src_json			hive_test_user	USER	DELETE	true	-1	hive_test_user
--default	src_json			hive_test_user	USER	INSERT	true	-1	hive_test_user
--default	src_json			hive_test_user	USER	SELECT	true	-1	hive_test_user
--default	src_json			hive_test_user	USER	UPDATE	true	-1	hive_test_user
--default	src_sequencefile			hive_test_user	USER	DELETE	true	-1	hive_test_user
--default	src_sequencefile			hive_test_user	USER	INSERT	true	-1	hive_test_user
--default	src_sequencefile			hive_test_user	USER	SELECT	true	-1	hive_test_user
--default	src_sequencefile			hive_test_user	USER	UPDATE	true	-1	hive_test_user
--default	src_thrift			hive_test_user	USER	DELETE	true	-1	hive_test_user
--default	src_thrift			hive_test_user	USER	INSERT	true	-1	hive_test_user
--default	src_thrift			hive_test_user	USER	SELECT	true	-1	hive_test_user
--default	src_thrift			hive_test_user	USER	UPDATE	true	-1	hive_test_user
--default	srcbucket			hive_test_user	USER	DELETE	true	-1	hive_test_user
--default	srcbucket			hive_test_user	USER	INSERT	true	-1	hive_test_user
--default	srcbucket			hive_test_user	USER	SELECT	true	-1	hive_test_user
--default	srcbucket			hive_test_user	USER	UPDATE	true	-1	hive_test_user
--default	srcbucket2			hive_test_user	USER	DELETE	true	-1	hive_test_user
--default	srcbucket2			hive_test_user	USER	INSERT	true	-1	hive_test_user
--default	srcbucket2			hive_test_user	USER	SELECT	true	-1	hive_test_user
--default	srcbucket2			hive_test_user	USER	UPDATE	true	-1	hive_test_user
--default	srcpart			hive_test_user	USER	DELETE	true	-1	hive_test_user
--default	srcpart			hive_test_user	USER	INSERT	true	-1	hive_test_user
--default	srcpart			hive_test_user	USER	SELECT	true	-1	hive_test_user
--default	srcpart			hive_test_user	USER	UPDATE	true	-1	hive_test_user
- PREHOOK: query: DROP DATABASE IF EXISTS SYS CASCADE
- PREHOOK: type: DROPDATABASE
- POSTHOOK: query: DROP DATABASE IF EXISTS SYS CASCADE
 diff --git ql/src/test/results/clientpositive/llap/temp_table.q.out ql/src/test/results/clientpositive/llap/temp_table.q.out
 index b04c643697..de0fef2aca 100644
 --- ql/src/test/results/clientpositive/llap/temp_table.q.out
