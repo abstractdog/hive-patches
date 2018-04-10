@@ -1,0 +1,256 @@
+diff --git ql/src/test/queries/clientpositive/stats_analyze_empty.q ql/src/test/queries/clientpositive/stats_analyze_empty.q
+new file mode 100644
+index 0000000000..6ea6125964
+--- /dev/null
++++ ql/src/test/queries/clientpositive/stats_analyze_empty.q
+@@ -0,0 +1,18 @@
++set hive.stats.autogather=true;
++set hive.explain.user=true;
++
++drop table if exists testdeci2;
++
++create table testdeci2(
++id int,
++amount decimal(10,3),
++sales_tax decimal(10,3),
++item string)
++stored as orc location '/tmp/testdeci2'
++TBLPROPERTIES ("transactional"="false")
++;
++
++
++analyze table testdeci2 compute statistics for columns;
++
++insert into table testdeci2 values(1,12.123,12345.123,'desk1'),(2,123.123,1234.123,'desk2');
+diff --git ql/src/test/results/clientpositive/stats_analyze_empty.q.out ql/src/test/results/clientpositive/stats_analyze_empty.q.out
+new file mode 100644
+index 0000000000..6eb51e950d
+--- /dev/null
++++ ql/src/test/results/clientpositive/stats_analyze_empty.q.out
+@@ -0,0 +1,48 @@
++PREHOOK: query: drop table if exists testdeci2
++PREHOOK: type: DROPTABLE
++POSTHOOK: query: drop table if exists testdeci2
++POSTHOOK: type: DROPTABLE
++PREHOOK: query: create table testdeci2(
++id int,
++amount decimal(10,3),
++sales_tax decimal(10,3),
++item string)
++#### A masked pattern was here ####
++TBLPROPERTIES ("transactional"="false")
++PREHOOK: type: CREATETABLE
++#### A masked pattern was here ####
++PREHOOK: Output: database:default
++PREHOOK: Output: default@testdeci2
++POSTHOOK: query: create table testdeci2(
++id int,
++amount decimal(10,3),
++sales_tax decimal(10,3),
++item string)
++#### A masked pattern was here ####
++TBLPROPERTIES ("transactional"="false")
++POSTHOOK: type: CREATETABLE
++#### A masked pattern was here ####
++POSTHOOK: Output: database:default
++POSTHOOK: Output: default@testdeci2
++PREHOOK: query: analyze table testdeci2 compute statistics for columns
++PREHOOK: type: QUERY
++PREHOOK: Input: default@testdeci2
++PREHOOK: Output: default@testdeci2
++#### A masked pattern was here ####
++POSTHOOK: query: analyze table testdeci2 compute statistics for columns
++POSTHOOK: type: QUERY
++POSTHOOK: Input: default@testdeci2
++POSTHOOK: Output: default@testdeci2
++#### A masked pattern was here ####
++PREHOOK: query: insert into table testdeci2 values(1,12.123,12345.123,'desk1'),(2,123.123,1234.123,'desk2')
++PREHOOK: type: QUERY
++PREHOOK: Input: _dummy_database@_dummy_table
++PREHOOK: Output: default@testdeci2
++POSTHOOK: query: insert into table testdeci2 values(1,12.123,12345.123,'desk1'),(2,123.123,1234.123,'desk2')
++POSTHOOK: type: QUERY
++POSTHOOK: Input: _dummy_database@_dummy_table
++POSTHOOK: Output: default@testdeci2
++POSTHOOK: Lineage: testdeci2.amount SCRIPT []
++POSTHOOK: Lineage: testdeci2.id SCRIPT []
++POSTHOOK: Lineage: testdeci2.item SCRIPT []
++POSTHOOK: Lineage: testdeci2.sales_tax SCRIPT []
+diff --git standalone-metastore/src/main/java/org/apache/hadoop/hive/metastore/columnstats/merge/DecimalColumnStatsMerger.java standalone-metastore/src/main/java/org/apache/hadoop/hive/metastore/columnstats/merge/DecimalColumnStatsMerger.java
+index 01f3385d70..268e54716a 100644
+--- standalone-metastore/src/main/java/org/apache/hadoop/hive/metastore/columnstats/merge/DecimalColumnStatsMerger.java
++++ standalone-metastore/src/main/java/org/apache/hadoop/hive/metastore/columnstats/merge/DecimalColumnStatsMerger.java
+@@ -31,15 +31,15 @@ public void merge(ColumnStatisticsObj aggregateColStats, ColumnStatisticsObj new
+         (DecimalColumnStatsDataInspector) aggregateColStats.getStatsData().getDecimalStats();
+     DecimalColumnStatsDataInspector newData =
+         (DecimalColumnStatsDataInspector) newColStats.getStatsData().getDecimalStats();
+-    Decimal lowValue = aggregateData.getLowValue() != null
+-        && (aggregateData.getLowValue().compareTo(newData.getLowValue()) > 0) ? aggregateData
+-        .getLowValue() : newData.getLowValue();
++
++    Decimal lowValue = compareValues(aggregateData.getLowValue(), newData.getLowValue());
+     aggregateData.setLowValue(lowValue);
+-    Decimal highValue = aggregateData.getHighValue() != null
+-        && (aggregateData.getHighValue().compareTo(newData.getHighValue()) > 0) ? aggregateData
+-        .getHighValue() : newData.getHighValue();
++
++    Decimal highValue = compareValues(aggregateData.getHighValue(), newData.getHighValue());
+     aggregateData.setHighValue(highValue);
++   
+     aggregateData.setNumNulls(aggregateData.getNumNulls() + newData.getNumNulls());
++    
+     if (aggregateData.getNdvEstimator() == null || newData.getNdvEstimator() == null) {
+       aggregateData.setNumDVs(Math.max(aggregateData.getNumDVs(), newData.getNumDVs()));
+     } else {
+@@ -58,4 +58,16 @@ public void merge(ColumnStatisticsObj aggregateColStats, ColumnStatisticsObj new
+       aggregateData.setNumDVs(ndv);
+     }
+   }
++  
++  protected Decimal compareValues(Decimal oldValue, Decimal newValue){
++    if (oldValue == null && newValue == null){
++      return null;
++    }
++    
++    if (oldValue != null && newValue != null) {
++      return oldValue.compareTo(newValue) > 0 ? oldValue : newValue;
++    }
++    
++    return oldValue == null ? newValue : oldValue;
++  }
+ }
+diff --git standalone-metastore/src/test/java/org/apache/hadoop/hive/metastore/columnstats/merge/DecimalColumnStatsMergerTest.java standalone-metastore/src/test/java/org/apache/hadoop/hive/metastore/columnstats/merge/DecimalColumnStatsMergerTest.java
+new file mode 100644
+index 0000000000..916c6b2d9f
+--- /dev/null
++++ standalone-metastore/src/test/java/org/apache/hadoop/hive/metastore/columnstats/merge/DecimalColumnStatsMergerTest.java
+@@ -0,0 +1,129 @@
++/*
++ * Licensed to the Apache Software Foundation (ASF) under one
++ * or more contributor license agreements.  See the NOTICE file
++ * distributed with this work for additional information
++ * regarding copyright ownership.  The ASF licenses this file
++ * to you under the Apache License, Version 2.0 (the
++ * "License"); you may not use this file except in compliance
++ * with the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing,
++ * software distributed under the License is distributed on an
++ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
++ * KIND, either express or implied.  See the License for the
++ * specific language governing permissions and limitations
++ * under the License.
++ */
++
++package org.apache.hadoop.hive.metastore.columnstats.merge;
++
++import java.nio.ByteBuffer;
++
++import org.apache.hadoop.hive.metastore.annotation.MetastoreUnitTest;
++import org.apache.hadoop.hive.metastore.api.ColumnStatisticsData;
++import org.apache.hadoop.hive.metastore.api.ColumnStatisticsObj;
++import org.apache.hadoop.hive.metastore.api.Decimal;
++import org.apache.hadoop.hive.metastore.columnstats.cache.DecimalColumnStatsDataInspector;
++import org.junit.Assert;
++import org.junit.Test;
++import org.junit.experimental.categories.Category;
++
++@Category(MetastoreUnitTest.class)
++public class DecimalColumnStatsMergerTest {
++
++  private static final Decimal DECIMAL_VALUE = getDecimal(1, 0);
++
++  private DecimalColumnStatsMerger merger = new DecimalColumnStatsMerger();
++
++  @Test
++  public void testMergeNullMinMaxValues() {
++    ColumnStatisticsObj objNulls = new ColumnStatisticsObj();
++    createData(objNulls, null, null);
++
++    merger.merge(objNulls, objNulls);
++
++    Assert.assertNull(objNulls.getStatsData().getDecimalStats().getLowValue());
++    Assert.assertNull(objNulls.getStatsData().getDecimalStats().getHighValue());
++  }
++
++  @Test
++  public void testMergeNonNullAndNullLowerValuesOldIsNull() {
++    ColumnStatisticsObj oldObj = new ColumnStatisticsObj();
++    createData(oldObj, null, null);
++
++    ColumnStatisticsObj newObj = new ColumnStatisticsObj();
++    createData(newObj, DECIMAL_VALUE, null);
++
++    merger.merge(oldObj, newObj);
++
++    Assert.assertEquals(getInt(DECIMAL_VALUE),
++        getInt(oldObj.getStatsData().getDecimalStats().getLowValue()));
++  }
++
++  @Test
++  public void testMergeNonNullAndNullLowerValuesNewIsNull() {
++    ColumnStatisticsObj oldObj = new ColumnStatisticsObj();
++    createData(oldObj, DECIMAL_VALUE, null);
++
++    ColumnStatisticsObj newObj = new ColumnStatisticsObj();
++    createData(newObj, null, null);
++
++    merger.merge(oldObj, newObj);
++
++    Assert.assertEquals(getInt(DECIMAL_VALUE),
++        getInt(oldObj.getStatsData().getDecimalStats().getLowValue()));
++  }
++
++  @Test
++  public void testMergeNonNullAndNullHigherValuesOldIsNull() {
++    ColumnStatisticsObj oldObj = new ColumnStatisticsObj();
++    createData(oldObj, null, null);
++
++    ColumnStatisticsObj newObj = new ColumnStatisticsObj();
++    createData(newObj, null, DECIMAL_VALUE);
++
++    merger.merge(oldObj, newObj);
++
++    Assert.assertEquals(getInt(DECIMAL_VALUE),
++        getInt(oldObj.getStatsData().getDecimalStats().getHighValue()));
++  }
++
++  @Test
++  public void testMergeNonNullAndNullHigherValuesNewIsNull() {
++    ColumnStatisticsObj oldObj = new ColumnStatisticsObj();
++    createData(oldObj, null, DECIMAL_VALUE);
++
++    ColumnStatisticsObj newObj = new ColumnStatisticsObj();
++    createData(newObj, null, null);
++
++    merger.merge(oldObj, newObj);
++
++    Assert.assertEquals(getInt(DECIMAL_VALUE),
++        getInt(oldObj.getStatsData().getDecimalStats().getHighValue()));
++  }
++
++  private int getInt(Decimal decimal) {
++    return ByteBuffer.wrap(decimal.getUnscaled()).getInt();
++  }
++
++  private static Decimal getDecimal(int number, int scale) {
++    ByteBuffer bb = ByteBuffer.allocate(4);
++    bb.asIntBuffer().put(number);
++    return new Decimal(bb, (short) scale);
++  }
++
++  private DecimalColumnStatsDataInspector createData(ColumnStatisticsObj objNulls, Decimal lowValue,
++      Decimal highValue) {
++    ColumnStatisticsData statisticsData = new ColumnStatisticsData();
++    DecimalColumnStatsDataInspector data = new DecimalColumnStatsDataInspector();
++
++    statisticsData.setDecimalStats(data);
++    objNulls.setStatsData(statisticsData);
++
++    data.setLowValue(lowValue);
++    data.setHighValue(highValue);
++    return data;
++  }
++}

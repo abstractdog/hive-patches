@@ -234,14 +234,14 @@ index fb7b5c912b..e09993555b 100644
  
  CREATE TEMPORARY FUNCTION example_add AS 'org.apache.hadoop.hive.contrib.udf.example.UDFExampleAdd';
 diff --git contrib/src/test/queries/clientpositive/udf_example_arraymapstruct.q contrib/src/test/queries/clientpositive/udf_example_arraymapstruct.q
-index 2c36520abd..3ba0e49e88 100644
+index a8ab75141a..f0979589b5 100644
 --- contrib/src/test/queries/clientpositive/udf_example_arraymapstruct.q
 +++ contrib/src/test/queries/clientpositive/udf_example_arraymapstruct.q
 @@ -1,3 +1,4 @@
 +--! qt:dataset:src_thrift
- add jar ${system:maven.local.repository}/org/apache/hive/hive-contrib/${system:hive.version}/hive-contrib-${system:hive.version}.jar;
- 
- CREATE TEMPORARY FUNCTION example_arraysum    AS 'org.apache.hadoop.hive.contrib.udf.example.UDFExampleArraySum';
+ -- Suppress vectorization due to known bug.  See HIVE-19110.
+ set hive.vectorized.execution.enabled=false;
+ set hive.test.vectorized.execution.enabled.override=disable;
 diff --git contrib/src/test/queries/clientpositive/udf_example_format.q contrib/src/test/queries/clientpositive/udf_example_format.q
 index edda00b69f..e42bab7559 100644
 --- contrib/src/test/queries/clientpositive/udf_example_format.q
@@ -1846,7 +1846,7 @@ index e6bf54b1e7..be4c6e89cd 100644
      execute(qFile.filterCommands(commands), qFile.getRawOutputFile(), qFile.getConverter());
      afterExecute(qFile);
 diff --git pom.xml pom.xml
-index 8fc9a755ea..46aa2de5ba 100644
+index 5802bd3a35..d887ae64aa 100644
 --- pom.xml
 +++ pom.xml
 @@ -1298,7 +1298,7 @@
@@ -2009,13 +2009,6 @@ index 866cec126f..e8f2c8d750 100644
 @@ -1 +1,2 @@
 +--! qt:dataset:src
  FROM (SELECT key, concat(value) AS key FROM src) a SELECT a.key;
-diff --git ql/src/test/queries/clientnegative/analyze.q ql/src/test/queries/clientnegative/analyze.q
-index 874f5bfc14..ee1d1b974e 100644
---- ql/src/test/queries/clientnegative/analyze.q
-+++ ql/src/test/queries/clientnegative/analyze.q
-@@ -1 +1,2 @@
-+--! qt:dataset:srcpart
- analyze table srcpart compute statistics;
 diff --git ql/src/test/queries/clientnegative/analyze1.q ql/src/test/queries/clientnegative/analyze1.q
 index 057a1a0b48..97863f92c3 100644
 --- ql/src/test/queries/clientnegative/analyze1.q
@@ -5597,7 +5590,7 @@ index d1cebeb506..0854718d94 100644
  -- TOK_ALLCOLREF
  explain select * from (select a.key, a.* from (select * from src) a join (select * from src1) b on (a.key = b.key)) t;
 diff --git ql/src/test/queries/clientpositive/analyze_tbl_part.q ql/src/test/queries/clientpositive/analyze_tbl_part.q
-index 54e816a9ff..fd486d610c 100644
+index e8010bd540..719854714f 100644
 --- ql/src/test/queries/clientpositive/analyze_tbl_part.q
 +++ ql/src/test/queries/clientpositive/analyze_tbl_part.q
 @@ -1,3 +1,4 @@
@@ -8492,14 +8485,23 @@ index 3c41ed5c84..001e30e0df 100644
  set hive.support.concurrency=true;
  set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
 diff --git ql/src/test/queries/clientpositive/delete_orig_table.q ql/src/test/queries/clientpositive/delete_orig_table.q
-index 81c7cba35b..f16de0e1dc 100644
+index c73b21c5ab..c009b76b1c 100644
 --- ql/src/test/queries/clientpositive/delete_orig_table.q
 +++ ql/src/test/queries/clientpositive/delete_orig_table.q
 @@ -1,3 +1,4 @@
 +--! qt:dataset:alltypesorc
- set hive.support.concurrency=true;
- set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
+ -- Suppress vectorization due to known bug.  See HIVE-19109.
+ set hive.vectorized.execution.enabled=false;
+ set hive.test.vectorized.execution.enabled.override=disable;
+@@ -7,7 +8,7 @@ set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
  set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
+ 
+ dfs ${system:test.dfs.mkdir} ${system:test.tmp.dir}/delete_orig_table;
+-dfs -copyFromLocal ../../data/files/alltypesorc ${system:test.tmp.dir}/delete_orig_table/00000_0; 
++dfs -copyFromLocal ../../data/files/alltypesorc ${system:test.tmp.dir}/delete_orig_table/00000_0;
+ 
+ create table acid_dot(
+     ctinyint TINYINT,
 diff --git ql/src/test/queries/clientpositive/delete_tmp_table.q ql/src/test/queries/clientpositive/delete_tmp_table.q
 index 49e586f7c0..1aea4aa778 100644
 --- ql/src/test/queries/clientpositive/delete_tmp_table.q
@@ -10733,25 +10735,25 @@ index 14377429fd..4c63a3545a 100644
  ROW FORMAT DELIMITED
  FIELDS TERMINATED BY '1'
 diff --git ql/src/test/queries/clientpositive/input_lazyserde.q ql/src/test/queries/clientpositive/input_lazyserde.q
-index c29cb82dac..1fb1ecc837 100644
+index c37e48be5a..f053fbe136 100644
 --- ql/src/test/queries/clientpositive/input_lazyserde.q
 +++ ql/src/test/queries/clientpositive/input_lazyserde.q
 @@ -1,3 +1,5 @@
 +--! qt:dataset:srcbucket2
 +--! qt:dataset:src_thrift
- -- SORT_QUERY_RESULTS
- 
- DROP TABLE dest1;
+ -- Suppress vectorization due to known bug.  See HIVE-19088.
+ set hive.vectorized.execution.enabled=false;
+ set hive.test.vectorized.execution.enabled.override=none;
 diff --git ql/src/test/queries/clientpositive/input_lazyserde2.q ql/src/test/queries/clientpositive/input_lazyserde2.q
-index 0f5890707c..dd8481021a 100644
+index 2a2cf06b01..a1101065ae 100644
 --- ql/src/test/queries/clientpositive/input_lazyserde2.q
 +++ ql/src/test/queries/clientpositive/input_lazyserde2.q
 @@ -1,3 +1,5 @@
 +--! qt:dataset:srcbucket2
 +--! qt:dataset:src_thrift
- -- SORT_QUERY_RESULTS
- 
- DROP TABLE dest1;
+ -- Suppress vectorization due to known bug.  See HIVE-19088.
+ set hive.vectorized.execution.enabled=false;
+ set hive.test.vectorized.execution.enabled.override=none;
 diff --git ql/src/test/queries/clientpositive/input_limit.q ql/src/test/queries/clientpositive/input_limit.q
 index 6d4363e590..c0a17eb46f 100644
 --- ql/src/test/queries/clientpositive/input_limit.q
@@ -13552,7 +13554,7 @@ index 8f50f300d0..eb97bcf856 100644
  SELECT src.key, sum(substr(src.value,5)) FROM src GROUP BY src.key ORDER BY src.key LIMIT 10,10;
  
 diff --git ql/src/test/queries/clientpositive/offset_limit_global_optimizer.q ql/src/test/queries/clientpositive/offset_limit_global_optimizer.q
-index 5ddb9a6ce3..52cab5ebc1 100644
+index 8e08fbd16a..350aa55991 100644
 --- ql/src/test/queries/clientpositive/offset_limit_global_optimizer.q
 +++ ql/src/test/queries/clientpositive/offset_limit_global_optimizer.q
 @@ -1,3 +1,4 @@
@@ -14090,15 +14092,15 @@ index 41d0d64a7c..c635128722 100644
  SET hive.optimize.ppd=true;
  SET mapred.min.split.size=1000;
 diff --git ql/src/test/queries/clientpositive/parquet_ppd_decimal.q ql/src/test/queries/clientpositive/parquet_ppd_decimal.q
-index ff883dbf48..684544c40c 100644
+index ade49a3e41..f945112fb6 100644
 --- ql/src/test/queries/clientpositive/parquet_ppd_decimal.q
 +++ ql/src/test/queries/clientpositive/parquet_ppd_decimal.q
 @@ -1,3 +1,5 @@
 +--! qt:dataset:src1
 +--! qt:dataset:src
- SET hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat;
- SET mapred.min.split.size=1000;
- SET mapred.max.split.size=5000;
+ -- Suppress vectorization due to known bug.  See HIVE-19108.
+ set hive.vectorized.execution.enabled=false;
+ set hive.test.vectorized.execution.enabled.override=disable;
 diff --git ql/src/test/queries/clientpositive/parquet_ppd_timestamp.q ql/src/test/queries/clientpositive/parquet_ppd_timestamp.q
 index 1b9f6ff1a3..60fbe53c68 100644
 --- ql/src/test/queries/clientpositive/parquet_ppd_timestamp.q
@@ -18276,14 +18278,14 @@ index 538dfae06f..136ad58443 100644
  
  DESCRIBE FUNCTION concat_ws;
 diff --git ql/src/test/queries/clientpositive/udf_context_aware.q ql/src/test/queries/clientpositive/udf_context_aware.q
-index b12c213838..a3aa83e804 100644
+index bfbc73f9ae..5bc735a1f6 100644
 --- ql/src/test/queries/clientpositive/udf_context_aware.q
 +++ ql/src/test/queries/clientpositive/udf_context_aware.q
 @@ -1,3 +1,4 @@
 +--! qt:dataset:src
  SET hive.vectorized.execution.enabled=false;
+ set hive.test.vectorized.execution.enabled.override=disable;
  
- create temporary function counter as 'org.apache.hadoop.hive.ql.udf.generic.DummyContextUDF';
 diff --git ql/src/test/queries/clientpositive/udf_conv.q ql/src/test/queries/clientpositive/udf_conv.q
 index c6d6cf8600..ac77a5daf6 100644
 --- ql/src/test/queries/clientpositive/udf_conv.q
@@ -20324,7 +20326,7 @@ index bd8e875e3d..afa48d9b19 100644
  set hive.fetch.task.conversion=none;
  
 diff --git ql/src/test/queries/clientpositive/vector_udf3.q ql/src/test/queries/clientpositive/vector_udf3.q
-index bc3a5e162d..a07fae9a01 100644
+index bfaa2e7915..cf1071d8df 100644
 --- ql/src/test/queries/clientpositive/vector_udf3.q
 +++ ql/src/test/queries/clientpositive/vector_udf3.q
 @@ -1,3 +1,4 @@
@@ -21806,12 +21808,12 @@ index b650309c72..0d846bef23 100644
 -FAILED: SemanticException [Error 10250]: org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException: Line 7:7 Invalid SubQuery expression ''val_9'': A predicate on EXISTS/NOT EXISTS SubQuery with implicit Aggregation(no Group By clause) cannot be rewritten.
 +FAILED: SemanticException [Error 10250]: org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException: Line 8:7 Invalid SubQuery expression ''val_9'': A predicate on EXISTS/NOT EXISTS SubQuery with implicit Aggregation(no Group By clause) cannot be rewritten.
 diff --git ql/src/test/results/clientnegative/subquery_subquery_chain.q.out ql/src/test/results/clientnegative/subquery_subquery_chain.q.out
-index e08b86cef0..45425089a4 100644
+index ca9d03a998..23ae2874df 100644
 --- ql/src/test/results/clientnegative/subquery_subquery_chain.q.out
 +++ ql/src/test/results/clientnegative/subquery_subquery_chain.q.out
 @@ -1 +1 @@
--FAILED: ParseException line 5:39 missing EOF at 'in' near ')'
-+FAILED: ParseException line 6:39 missing EOF at 'in' near ')'
+-FAILED: ParseException line 5:39 cannot recognize input near 'in' '(' 'select' in expression specification
++FAILED: ParseException line 6:39 cannot recognize input near 'in' '(' 'select' in expression specification
 diff --git ql/src/test/results/clientnegative/subquery_subquery_chain_exists.q.out ql/src/test/results/clientnegative/subquery_subquery_chain_exists.q.out
 index 9b5212be98..9b957e61aa 100644
 --- ql/src/test/results/clientnegative/subquery_subquery_chain_exists.q.out

@@ -1,0 +1,156 @@
+diff --git a/src/java/org/apache/sqoop/manager/OracleManager.java b/src/java/org/apache/sqoop/manager/OracleManager.java
+index 929b5061..bdd86d70 100644
+--- a/src/java/org/apache/sqoop/manager/OracleManager.java
++++ b/src/java/org/apache/sqoop/manager/OracleManager.java
+@@ -331,19 +331,30 @@ protected Connection makeConnection() throws SQLException {
+       }
+     }
+ 
+-    // We only use this for metadata queries. Loosest semantics are okay.
+-    connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
++    prepareConnection(connection);
+ 
+-    // Setting session time zone
+-    setSessionTimeZone(connection);
++    return connection;
++  }
+ 
+-    // Rest of the Sqoop code expects that the connection will have be running
+-    // without autoCommit, so we need to explicitly set it to false. This is
+-    // usually done directly by SqlManager in the makeConnection method, but
+-    // since we are overriding it, we have to do it ourselves.
+-    connection.setAutoCommit(false);
++  void prepareConnection(Connection connection) throws SQLException {
++    try {
++      // We only use this for metadata queries. Loosest semantics are okay.
++      connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+ 
+-    return connection;
++      // Setting session time zone
++      setSessionTimeZone(connection);
++
++      // Rest of the Sqoop code expects that the connection will have be running
++      // without autoCommit, so we need to explicitly set it to false. This is
++      // usually done directly by SqlManager in the makeConnection method, but
++      // since we are overriding it, we have to do it ourselves.
++      connection.setAutoCommit(false);
++    } catch (SQLException e) {
++      if (connection != null) {
++        connection.close();
++      }
++      throw e;
++    }
+   }
+ 
+   public static String getSessionUser(Connection conn) {
+diff --git a/src/java/org/apache/sqoop/mapreduce/db/DBOutputFormat.java b/src/java/org/apache/sqoop/mapreduce/db/DBOutputFormat.java
+index 730ff286..07f19bcf 100644
+--- a/src/java/org/apache/sqoop/mapreduce/db/DBOutputFormat.java
++++ b/src/java/org/apache/sqoop/mapreduce/db/DBOutputFormat.java
+@@ -112,8 +112,9 @@ public String constructQuery(String table, String[] fieldNames) {
+       fieldNames = new String[dbConf.getOutputFieldCount()];
+     }
+ 
++    Connection connection = null;
+     try {
+-      Connection connection = dbConf.getConnection();
++      connection = dbConf.getConnection();
+       PreparedStatement statement = null;
+ 
+       statement = connection.prepareStatement(
+@@ -121,6 +122,13 @@ public String constructQuery(String table, String[] fieldNames) {
+       return new org.apache.sqoop.mapreduce.db.DBOutputFormat.DBRecordWriter(
+                      connection, statement);
+     } catch (Exception ex) {
++      if (connection != null){
++        try {
++          connection.close();
++        } catch (SQLException e) {
++          throw new IOException(e);
++        }
++      }
+       throw new IOException(ex);
+     }
+   }
+diff --git a/src/test/org/apache/sqoop/manager/TestOracleManager.java b/src/test/org/apache/sqoop/manager/TestOracleManager.java
+new file mode 100644
+index 00000000..23fc4276
+--- /dev/null
++++ b/src/test/org/apache/sqoop/manager/TestOracleManager.java
+@@ -0,0 +1,76 @@
++/**
++ * Licensed to the Apache Software Foundation (ASF) under one
++ * or more contributor license agreements.  See the NOTICE file
++ * distributed with this work for additional information
++ * regarding copyright ownership.  The ASF licenses this file
++ * to you under the Apache License, Version 2.0 (the
++ * "License"); you may not use this file except in compliance
++ * with the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.apache.sqoop.manager;
++
++import static org.mockito.Matchers.any;
++import static org.mockito.Mockito.*;
++
++import java.sql.Connection;
++import java.sql.SQLException;
++
++import org.apache.commons.logging.Log;
++import org.apache.commons.logging.LogFactory;
++import org.apache.sqoop.SqoopOptions;
++import org.apache.sqoop.manager.oracle.util.OracleUtils;
++import org.junit.Test;
++
++public class TestOracleManager {
++  public static final Log LOG = LogFactory.getLog(TestOracleManager.class.getName());
++  static final String TABLE_NAME = "EMPLOYEES";
++
++  private OracleManager getOracleManager() {
++    SqoopOptions options = new SqoopOptions(OracleUtils.CONNECT_STRING, TABLE_NAME);
++    OracleUtils.setOracleAuth(options);
++
++    OracleManager manager = new OracleManager(options);
++    return manager;
++  }
++
++  private OracleManager getSpiedOracleManager() {
++    OracleManager manager = spy(getOracleManager());
++    return manager;
++  }
++
++  @Test(expected = SQLException.class)
++  public void testExceptionThrownOnFailureWhilePreparingConnection() throws Exception {
++    OracleManager manager = getSpiedOracleManager();
++    doThrow(new SQLException()).when(manager).prepareConnection(any(Connection.class));
++
++    manager.getConnection();
++  }
++
++  @Test
++  public void testConnectionClosedOnFailureWhilePreparingConnection() throws Exception {
++    OracleManager manager = getOracleManager();
++    Connection connMock = spy(manager.getConnection());
++
++    OracleManager managerSpy = getSpiedOracleManager();
++    doThrow(new SQLException()).when(managerSpy).prepareConnection(connMock);
++
++    try {
++      managerSpy.getConnection();
++    } catch (SQLException e) {
++      LOG.info(String.format("SQLException thrown: ", e.getMessage()));
++      verify(connMock, times(1)).close();
++    }
++
++    manager.close();
++    managerSpy.close();
++  }
++}
