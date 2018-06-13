@@ -1,0 +1,152 @@
+diff --git ql/src/java/org/apache/hadoop/hive/ql/parse/HiveLexer.g ql/src/java/org/apache/hadoop/hive/ql/parse/HiveLexer.g
+index d4b5782430..43ad7dd632 100644
+--- ql/src/java/org/apache/hadoop/hive/ql/parse/HiveLexer.g
++++ ql/src/java/org/apache/hadoop/hive/ql/parse/HiveLexer.g
+@@ -43,6 +43,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
+ 
+ KW_TRUE : 'TRUE';
+ KW_FALSE : 'FALSE';
++KW_UNKNOWN : 'UNKNOWN';
+ KW_ALL : 'ALL';
+ KW_NONE: 'NONE';
+ KW_AND : 'AND';
+diff --git ql/src/java/org/apache/hadoop/hive/ql/parse/HiveParser.g ql/src/java/org/apache/hadoop/hive/ql/parse/HiveParser.g
+index d4a0ed3b32..324c80487e 100644
+--- ql/src/java/org/apache/hadoop/hive/ql/parse/HiveParser.g
++++ ql/src/java/org/apache/hadoop/hive/ql/parse/HiveParser.g
+@@ -69,6 +69,7 @@ TOK_OP_NOT;
+ TOK_OP_LIKE;
+ TOK_TRUE;
+ TOK_FALSE;
++TOK_UNKNOWN;
+ TOK_TRANSFORM;
+ TOK_SERDE;
+ TOK_SERDENAME;
+@@ -451,6 +452,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
+     // Keywords
+     xlateMap.put("KW_TRUE", "TRUE");
+     xlateMap.put("KW_FALSE", "FALSE");
++    xlateMap.put("KW_UNKNOWN", "UNKNOWN");
+     xlateMap.put("KW_ALL", "ALL");
+     xlateMap.put("KW_NONE", "NONE");
+     xlateMap.put("KW_AND", "AND");
+diff --git ql/src/java/org/apache/hadoop/hive/ql/parse/IdentifiersParser.g ql/src/java/org/apache/hadoop/hive/ql/parse/IdentifiersParser.g
+index 55bd92dc76..7dc6146c9e 100644
+--- ql/src/java/org/apache/hadoop/hive/ql/parse/IdentifiersParser.g
++++ ql/src/java/org/apache/hadoop/hive/ql/parse/IdentifiersParser.g
+@@ -450,9 +450,11 @@ isCondition
+     : KW_NULL -> Identifier["isnull"]
+     | KW_TRUE -> Identifier["istrue"]
+     | KW_FALSE -> Identifier["isfalse"]
++    | KW_UNKNOWN -> Identifier["isnull"]
+     | KW_NOT KW_NULL -> Identifier["isnotnull"]
+     | KW_NOT KW_TRUE -> Identifier["isnottrue"]
+     | KW_NOT KW_FALSE -> Identifier["isnotfalse"]
++    | KW_NOT KW_UNKNOWN -> Identifier["isnotnull"]
+     ;
+ 
+ precedenceUnaryPrefixExpression
+@@ -663,7 +665,7 @@ precedenceOrExpression
+ 
+ booleanValue
+     :
+-    KW_TRUE^ | KW_FALSE^
++    KW_TRUE^ | KW_FALSE^ | KW_UNKNOWN^
+     ;
+ 
+ booleanValueTok
+@@ -835,6 +837,7 @@ nonReserved
+     | KW_REOPTIMIZATION
+     | KW_RESOURCE | KW_PLAN | KW_PLANS | KW_QUERY_PARALLELISM | KW_ACTIVATE | KW_MOVE | KW_DO
+     | KW_POOL | KW_ALLOC_FRACTION | KW_SCHEDULING_POLICY | KW_PATH | KW_MAPPING | KW_WORKLOAD | KW_MANAGEMENT | KW_ACTIVE | KW_UNMANAGED
++    | KW_UNKNOWN
+ 
+ ;
+ 
+diff --git ql/src/test/queries/clientpositive/bool_unknown.q ql/src/test/queries/clientpositive/bool_unknown.q
+new file mode 100644
+index 0000000000..159bab3fe1
+--- /dev/null
++++ ql/src/test/queries/clientpositive/bool_unknown.q
+@@ -0,0 +1,10 @@
++select assert_true(null is unknown);
++
++select assert_true(true is not unknown);
++select assert_true(false is not unknown);
++
++select assert_true((null = null) is unknown);
++select assert_true((null = false) is unknown);
++select assert_true((null = true) is unknown);
++
++select assert_true((select cast(null as boolean)) is unknown);
+diff --git ql/src/test/results/clientpositive/bool_unknown.q.out ql/src/test/results/clientpositive/bool_unknown.q.out
+new file mode 100644
+index 0000000000..8e9b48ccaf
+--- /dev/null
++++ ql/src/test/results/clientpositive/bool_unknown.q.out
+@@ -0,0 +1,65 @@
++PREHOOK: query: select assert_true(null is unknown)
++PREHOOK: type: QUERY
++PREHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++POSTHOOK: query: select assert_true(null is unknown)
++POSTHOOK: type: QUERY
++POSTHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++NULL
++PREHOOK: query: select assert_true(true is not unknown)
++PREHOOK: type: QUERY
++PREHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++POSTHOOK: query: select assert_true(true is not unknown)
++POSTHOOK: type: QUERY
++POSTHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++NULL
++PREHOOK: query: select assert_true(false is not unknown)
++PREHOOK: type: QUERY
++PREHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++POSTHOOK: query: select assert_true(false is not unknown)
++POSTHOOK: type: QUERY
++POSTHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++NULL
++PREHOOK: query: select assert_true((null = null) is unknown)
++PREHOOK: type: QUERY
++PREHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++POSTHOOK: query: select assert_true((null = null) is unknown)
++POSTHOOK: type: QUERY
++POSTHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++NULL
++PREHOOK: query: select assert_true((null = false) is unknown)
++PREHOOK: type: QUERY
++PREHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++POSTHOOK: query: select assert_true((null = false) is unknown)
++POSTHOOK: type: QUERY
++POSTHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++NULL
++PREHOOK: query: select assert_true((null = true) is unknown)
++PREHOOK: type: QUERY
++PREHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++POSTHOOK: query: select assert_true((null = true) is unknown)
++POSTHOOK: type: QUERY
++POSTHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++NULL
++Warning: Shuffle Join JOIN[17][tables = [$hdt$_0, $hdt$_1, $hdt$_2]] in Stage 'Stage-2:MAPRED' is a cross product
++Warning: Shuffle Join JOIN[14][tables = [$hdt$_0, $hdt$_1]] in Stage 'Stage-1:MAPRED' is a cross product
++PREHOOK: query: select assert_true((select cast(null as boolean)) is unknown)
++PREHOOK: type: QUERY
++PREHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++POSTHOOK: query: select assert_true((select cast(null as boolean)) is unknown)
++POSTHOOK: type: QUERY
++POSTHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++NULL

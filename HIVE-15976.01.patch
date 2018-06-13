@@ -1,0 +1,416 @@
+diff --git ql/src/java/org/apache/hadoop/hive/ql/exec/FunctionRegistry.java ql/src/java/org/apache/hadoop/hive/ql/exec/FunctionRegistry.java
+index e77fe18129..abc90f421e 100644
+--- ql/src/java/org/apache/hadoop/hive/ql/exec/FunctionRegistry.java
++++ ql/src/java/org/apache/hadoop/hive/ql/exec/FunctionRegistry.java
+@@ -353,6 +353,8 @@
+     system.registerGenericUDF("grouping", GenericUDFGrouping.class);
+ 
+     system.registerGenericUDF("current_database", UDFCurrentDB.class);
++    system.registerGenericUDF("current_catalog", GenericUDFCurrentCatalog.class);
++    system.registerGenericUDF("current_schema", GenericUDFCurrentSchema.class);
+     system.registerGenericUDF("current_date", GenericUDFCurrentDate.class);
+     system.registerGenericUDF("current_timestamp", GenericUDFCurrentTimestamp.class);
+     system.registerGenericUDF("current_user", GenericUDFCurrentUser.class);
+diff --git ql/src/java/org/apache/hadoop/hive/ql/parse/HiveLexer.g ql/src/java/org/apache/hadoop/hive/ql/parse/HiveLexer.g
+index d4b5782430..a08683c9f2 100644
+--- ql/src/java/org/apache/hadoop/hive/ql/parse/HiveLexer.g
++++ ql/src/java/org/apache/hadoop/hive/ql/parse/HiveLexer.g
+@@ -281,6 +281,8 @@ KW_FOLLOWING: 'FOLLOWING';
+ KW_CURRENT: 'CURRENT';
+ KW_CURRENT_DATE: 'CURRENT_DATE';
+ KW_CURRENT_TIMESTAMP: 'CURRENT_TIMESTAMP';
++KW_CURRENT_CATALOG: 'CURRENT_CATALOG';
++KW_CURRENT_SCHEMA: 'CURRENT_SCHEMA';
+ KW_LESS: 'LESS';
+ KW_MORE: 'MORE';
+ KW_OVER: 'OVER';
+diff --git ql/src/java/org/apache/hadoop/hive/ql/parse/IdentifiersParser.g ql/src/java/org/apache/hadoop/hive/ql/parse/IdentifiersParser.g
+index 55bd92dc76..2cb7d06746 100644
+--- ql/src/java/org/apache/hadoop/hive/ql/parse/IdentifiersParser.g
++++ ql/src/java/org/apache/hadoop/hive/ql/parse/IdentifiersParser.g
+@@ -334,6 +334,8 @@ constant
+     | charSetStringLiteral
+     | booleanValue
+     | KW_NULL -> TOK_NULL
++    | KW_CURRENT_CATALOG-> ^(TOK_FUNCTION KW_CURRENT_CATALOG)
++    | KW_CURRENT_SCHEMA-> ^(TOK_FUNCTION KW_CURRENT_SCHEMA)
+     ;
+ 
+ stringLiteralSequence
+@@ -841,5 +843,5 @@ nonReserved
+ //The following SQL2011 reserved keywords are used as function name only, but not as identifiers.
+ sql11ReservedKeywordsUsedAsFunctionName
+     :
+-    KW_IF | KW_ARRAY | KW_MAP | KW_BIGINT | KW_BINARY | KW_BOOLEAN | KW_CURRENT_DATE | KW_CURRENT_TIMESTAMP | KW_DATE | KW_DOUBLE | KW_FLOAT | KW_GROUPING | KW_INT | KW_SMALLINT | KW_TIMESTAMP
++    KW_IF | KW_ARRAY | KW_MAP | KW_BIGINT | KW_BINARY | KW_BOOLEAN | KW_CURRENT_DATE | KW_CURRENT_TIMESTAMP | KW_DATE | KW_DOUBLE | KW_FLOAT | KW_GROUPING | KW_INT | KW_SMALLINT | KW_TIMESTAMP | KW_CURRENT_CATALOG | KW_CURRENT_SCHEMA
+     ;
+diff --git ql/src/java/org/apache/hadoop/hive/ql/udf/generic/GenericUDFCurrentCatalog.java ql/src/java/org/apache/hadoop/hive/ql/udf/generic/GenericUDFCurrentCatalog.java
+new file mode 100644
+index 0000000000..2e286a8a59
+--- /dev/null
++++ ql/src/java/org/apache/hadoop/hive/ql/udf/generic/GenericUDFCurrentCatalog.java
+@@ -0,0 +1,63 @@
++/*
++ * Licensed to the Apache Software Foundation (ASF) under one
++ * or more contributor license agreements.  See the NOTICE file
++ * distributed with this work for additional information
++ * regarding copyright ownership.  The ASF licenses this file
++ * to you under the Apache License, Version 2.0 (the
++ * "License"); you may not use this file except in compliance
++ * with the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.apache.hadoop.hive.ql.udf.generic;
++
++import org.apache.hadoop.hive.ql.exec.Description;
++import org.apache.hadoop.hive.ql.exec.MapredContext;
++import org.apache.hadoop.hive.ql.exec.UDFArgumentException;
++import org.apache.hadoop.hive.ql.metadata.HiveException;
++import org.apache.hadoop.hive.ql.session.SessionState;
++import org.apache.hadoop.hive.ql.udf.UDFType;
++import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
++import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory;
++import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
++import org.apache.hadoop.io.Text;
++
++import org.apache.hadoop.hive.ql.udf.generic.UDFUtils;
++
++// This function is not a deterministic function, but a runtime constant.
++// The return value is constant within a query but can be different between queries.
++@UDFType(deterministic = false, runtimeConstant = true)
++@Description(name = "current_catalog",
++    value = "_FUNC_() - returns currently using catalog(database) name")
++@NDV(maxNdv = 1)
++public class GenericUDFCurrentCatalog extends GenericUDF {
++
++  private MapredContext context;
++
++  @Override
++  public void configure(MapredContext context) {
++    this.context = context;
++  }
++
++  @Override
++  public ObjectInspector initialize(ObjectInspector[] arguments) throws UDFArgumentException {
++    return UDFUtils.getCurrentDatabaseInspector(context);
++  }
++
++  @Override
++  public Object evaluate(DeferredObject[] arguments) throws HiveException {
++    return SessionState.get().getCurrentDatabase();
++  }
++
++  @Override
++  public String getDisplayString(String[] children) {
++    return "current_catalog()";
++  }
++}
+diff --git ql/src/java/org/apache/hadoop/hive/ql/udf/generic/GenericUDFCurrentSchema.java ql/src/java/org/apache/hadoop/hive/ql/udf/generic/GenericUDFCurrentSchema.java
+new file mode 100644
+index 0000000000..a45db2cd44
+--- /dev/null
++++ ql/src/java/org/apache/hadoop/hive/ql/udf/generic/GenericUDFCurrentSchema.java
+@@ -0,0 +1,63 @@
++/*
++ * Licensed to the Apache Software Foundation (ASF) under one
++ * or more contributor license agreements.  See the NOTICE file
++ * distributed with this work for additional information
++ * regarding copyright ownership.  The ASF licenses this file
++ * to you under the Apache License, Version 2.0 (the
++ * "License"); you may not use this file except in compliance
++ * with the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.apache.hadoop.hive.ql.udf.generic;
++
++import org.apache.hadoop.hive.ql.exec.Description;
++import org.apache.hadoop.hive.ql.exec.MapredContext;
++import org.apache.hadoop.hive.ql.exec.UDFArgumentException;
++import org.apache.hadoop.hive.ql.metadata.HiveException;
++import org.apache.hadoop.hive.ql.session.SessionState;
++import org.apache.hadoop.hive.ql.udf.UDFType;
++import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
++import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory;
++import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
++import org.apache.hadoop.io.Text;
++
++import org.apache.hadoop.hive.ql.udf.generic.UDFUtils;
++
++// This function is not a deterministic function, but a runtime constant.
++// The return value is constant within a query but can be different between queries.
++@UDFType(deterministic = false, runtimeConstant = true)
++@Description(name = "current_schema",
++    value = "_FUNC_() - returns currently using schema(database) name")
++@NDV(maxNdv = 1)
++public class GenericUDFCurrentSchema extends GenericUDF {
++
++  private MapredContext context;
++
++  @Override
++  public void configure(MapredContext context) {
++    this.context = context;
++  }
++
++  @Override
++  public ObjectInspector initialize(ObjectInspector[] arguments) throws UDFArgumentException {
++    return UDFUtils.getCurrentDatabaseInspector(context);
++  }
++
++  @Override
++  public Object evaluate(DeferredObject[] arguments) throws HiveException {
++    return SessionState.get().getCurrentDatabase();
++  }
++
++  @Override
++  public String getDisplayString(String[] children) {
++    return "current_schema()";
++  }
++}
+diff --git ql/src/java/org/apache/hadoop/hive/ql/udf/generic/UDFCurrentDB.java ql/src/java/org/apache/hadoop/hive/ql/udf/generic/UDFCurrentDB.java
+index 1eacc253b6..75c133dcec 100644
+--- ql/src/java/org/apache/hadoop/hive/ql/udf/generic/UDFCurrentDB.java
++++ ql/src/java/org/apache/hadoop/hive/ql/udf/generic/UDFCurrentDB.java
+@@ -25,9 +25,6 @@
+ import org.apache.hadoop.hive.ql.session.SessionState;
+ import org.apache.hadoop.hive.ql.udf.UDFType;
+ import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+-import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory;
+-import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
+-import org.apache.hadoop.io.Text;
+ 
+ // This function is not a deterministic function, but a runtime constant.
+ // The return value is constant within a query but can be different between queries.
+@@ -46,14 +43,7 @@ public void configure(MapredContext context) {
+ 
+   @Override
+   public ObjectInspector initialize(ObjectInspector[] arguments) throws UDFArgumentException {
+-    String database;
+-    if (context != null) {
+-      database = context.getJobConf().get("hive.current.database");
+-    } else {
+-      database = SessionState.get().getCurrentDatabase();
+-    }
+-    return PrimitiveObjectInspectorFactory.getPrimitiveWritableConstantObjectInspector(
+-        TypeInfoFactory.stringTypeInfo, new Text(database));
++    return UDFUtils.getCurrentDatabaseInspector(context);
+   }
+ 
+   @Override
+diff --git ql/src/java/org/apache/hadoop/hive/ql/udf/generic/UDFUtils.java ql/src/java/org/apache/hadoop/hive/ql/udf/generic/UDFUtils.java
+new file mode 100644
+index 0000000000..962fda065f
+--- /dev/null
++++ ql/src/java/org/apache/hadoop/hive/ql/udf/generic/UDFUtils.java
+@@ -0,0 +1,44 @@
++/*
++ * Licensed to the Apache Software Foundation (ASF) under one
++ * or more contributor license agreements.  See the NOTICE file
++ * distributed with this work for additional information
++ * regarding copyright ownership.  The ASF licenses this file
++ * to you under the Apache License, Version 2.0 (the
++ * "License"); you may not use this file except in compliance
++ * with the License.  You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package org.apache.hadoop.hive.ql.udf.generic;
++
++import org.apache.hadoop.hive.ql.exec.MapredContext;
++import org.apache.hadoop.hive.ql.session.SessionState;
++import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
++import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory;
++import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
++import org.apache.hadoop.io.Text;
++
++/**
++ * Utility class for UDFs.
++ *
++ */
++public class UDFUtils {
++
++  public static ObjectInspector getCurrentDatabaseInspector(MapredContext context) {
++    String database;
++    if (context != null) {
++      database = context.getJobConf().get("hive.current.database");
++    } else {
++      database = SessionState.get().getCurrentDatabase();
++    }
++    return PrimitiveObjectInspectorFactory.getPrimitiveWritableConstantObjectInspector(
++        TypeInfoFactory.stringTypeInfo, new Text(database));
++  }
++}
+diff --git ql/src/test/org/apache/hadoop/hive/ql/parse/TestSQL11ReservedKeyWordsNegative.java ql/src/test/org/apache/hadoop/hive/ql/parse/TestSQL11ReservedKeyWordsNegative.java
+index 2ad2990ee0..f423384e22 100644
+--- ql/src/test/org/apache/hadoop/hive/ql/parse/TestSQL11ReservedKeyWordsNegative.java
++++ ql/src/test/org/apache/hadoop/hive/ql/parse/TestSQL11ReservedKeyWordsNegative.java
+@@ -279,6 +279,30 @@ public void testSQL11ReservedKeyWords_CURRENT_TIMESTAMP() {
+ 		}
+ 	}
+ 
++  @Test
++  public void testSQL11ReservedKeyWords_CURRENT_CATALOG() {
++    try {
++      parse("CREATE TABLE CURRENT_CATALOG (col STRING)");
++      Assert.assertFalse("Expected ParseException", true);
++    } catch (ParseException ex) {
++      Assert.assertEquals("Failure didn't match.",
++          "line 1:13 cannot recognize input near 'CURRENT_CATALOG' '(' 'col' in table name",
++          ex.getMessage());
++    }
++  }
++
++  @Test
++  public void testSQL11ReservedKeyWords_CURRENT_SCHEMA() {
++    try {
++      parse("CREATE TABLE CURRENT_SCHEMA (col STRING)");
++      Assert.assertFalse("Expected ParseException", true);
++    } catch (ParseException ex) {
++      Assert.assertEquals("Failure didn't match.",
++          "line 1:13 cannot recognize input near 'CURRENT_SCHEMA' '(' 'col' in table name",
++          ex.getMessage());
++    }
++  }
++
+ 	@Test
+ 	public void testSQL11ReservedKeyWords_CURSOR() {
+ 		try {
+diff --git ql/src/test/queries/clientpositive/current_catalog_and_schema.q ql/src/test/queries/clientpositive/current_catalog_and_schema.q
+new file mode 100644
+index 0000000000..a31d7705ff
+--- /dev/null
++++ ql/src/test/queries/clientpositive/current_catalog_and_schema.q
+@@ -0,0 +1,14 @@
++use default;
++
++select current_catalog();
++select current_schema();
++select current_catalog;
++select current_schema;
++
++create database test_current_database;
++use test_current_database;
++
++select current_catalog();
++select current_schema();
++select current_catalog;
++select current_schema;
+\ No newline at end of file
+diff --git ql/src/test/results/clientpositive/current_catalog_and_schema.q.out ql/src/test/results/clientpositive/current_catalog_and_schema.q.out
+new file mode 100644
+index 0000000000..0afbd9d580
+--- /dev/null
++++ ql/src/test/results/clientpositive/current_catalog_and_schema.q.out
+@@ -0,0 +1,90 @@
++PREHOOK: query: use default
++PREHOOK: type: SWITCHDATABASE
++PREHOOK: Input: database:default
++POSTHOOK: query: use default
++POSTHOOK: type: SWITCHDATABASE
++POSTHOOK: Input: database:default
++PREHOOK: query: select current_catalog()
++PREHOOK: type: QUERY
++PREHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++POSTHOOK: query: select current_catalog()
++POSTHOOK: type: QUERY
++POSTHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++default
++PREHOOK: query: select current_schema()
++PREHOOK: type: QUERY
++PREHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++POSTHOOK: query: select current_schema()
++POSTHOOK: type: QUERY
++POSTHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++default
++PREHOOK: query: select current_catalog
++PREHOOK: type: QUERY
++PREHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++POSTHOOK: query: select current_catalog
++POSTHOOK: type: QUERY
++POSTHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++default
++PREHOOK: query: select current_schema
++PREHOOK: type: QUERY
++PREHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++POSTHOOK: query: select current_schema
++POSTHOOK: type: QUERY
++POSTHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++default
++PREHOOK: query: create database test_current_database
++PREHOOK: type: CREATEDATABASE
++PREHOOK: Output: database:test_current_database
++POSTHOOK: query: create database test_current_database
++POSTHOOK: type: CREATEDATABASE
++POSTHOOK: Output: database:test_current_database
++PREHOOK: query: use test_current_database
++PREHOOK: type: SWITCHDATABASE
++PREHOOK: Input: database:test_current_database
++POSTHOOK: query: use test_current_database
++POSTHOOK: type: SWITCHDATABASE
++POSTHOOK: Input: database:test_current_database
++PREHOOK: query: select current_catalog()
++PREHOOK: type: QUERY
++PREHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++POSTHOOK: query: select current_catalog()
++POSTHOOK: type: QUERY
++POSTHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++test_current_database
++PREHOOK: query: select current_schema()
++PREHOOK: type: QUERY
++PREHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++POSTHOOK: query: select current_schema()
++POSTHOOK: type: QUERY
++POSTHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++test_current_database
++PREHOOK: query: select current_catalog
++PREHOOK: type: QUERY
++PREHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++POSTHOOK: query: select current_catalog
++POSTHOOK: type: QUERY
++POSTHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++test_current_database
++PREHOOK: query: select current_schema
++PREHOOK: type: QUERY
++PREHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++POSTHOOK: query: select current_schema
++POSTHOOK: type: QUERY
++POSTHOOK: Input: _dummy_database@_dummy_table
++#### A masked pattern was here ####
++test_current_database

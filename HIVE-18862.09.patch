@@ -1849,7 +1849,7 @@ index e6bf54b1e7..be4c6e89cd 100644
      execute(qFile.filterCommands(commands), qFile.getRawOutputFile(), qFile.getConverter());
      afterExecute(qFile);
 diff --git pom.xml pom.xml
-index 5802bd3a35..d887ae64aa 100644
+index 26721ed957..ca915ef061 100644
 --- pom.xml
 +++ pom.xml
 @@ -1298,7 +1298,7 @@
@@ -21614,6 +21614,13 @@ index 5c1c71fe5c..76a9c8dd4d 100644
 @@ -1 +1 @@
 -FAILED: SemanticException [Error 10004]: Line 2:50 Invalid table alias or column reference 'key': (possible column names are: k1, x.value)
 +FAILED: SemanticException [Error 10004]: Line 3:50 Invalid table alias or column reference 'key': (possible column names are: k1, x.value)
+diff --git ql/src/test/results/clientnegative/column_rename3.q.out ql/src/test/results/clientnegative/column_rename3.q.out
+index 6d521f5f93..de9e122b80 100644
+--- ql/src/test/results/clientnegative/column_rename3.q.out
++++ ql/src/test/results/clientnegative/column_rename3.q.out
+@@ -1 +1 @@
+-FAILED: ParseException line 1:30 cannot recognize input near '<EOF>' '<EOF>' '<EOF>' in column type
++FAILED: ParseException line 2:30 cannot recognize input near '<EOF>' '<EOF>' '<EOF>' in column type
 diff --git ql/src/test/results/clientnegative/groupby_key.q.out ql/src/test/results/clientnegative/groupby_key.q.out
 index f5f0958b6b..d3101e898d 100644
 --- ql/src/test/results/clientnegative/groupby_key.q.out
